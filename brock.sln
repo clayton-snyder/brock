@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "brock", "brock\brock.csproj", "{DB5B1919-6FE6-404E-8C0C-21784076AB9C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB5B1919-6FE6-404E-8C0C-21784076AB9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB5B1919-6FE6-404E-8C0C-21784076AB9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB5B1919-6FE6-404E-8C0C-21784076AB9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB5B1919-6FE6-404E-8C0C-21784076AB9C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {89BFD38D-C68B-47DF-9A67-F4AF150EC25F}
+	EndGlobalSection
+EndGlobal
