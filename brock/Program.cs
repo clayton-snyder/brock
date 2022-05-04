@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Discord.Audio;
 
-//TODO: https://makolyte.com/csharp-parsing-commands-and-arguments-in-a-console-app/#Using_CommandLineParser_to_parse_commands_and_arguments
-//TODO: Add slash commands! Self-documenting!
+// TODO: https://makolyte.com/csharp-parsing-commands-and-arguments-in-a-console-app/#Using_CommandLineParser_to_parse_commands_and_arguments
+// TODO: Add slash commands! Self-documenting!
+// TODO: Can the bin stuff be automated?
 namespace brock
 {
     internal class Program
