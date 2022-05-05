@@ -4,6 +4,6 @@
     <StartArguments>OTcwOTA1MDE1ODY4ODc0ODEz.YnCvwg.gsPaKKsZfByGLUrA4kKRwYuoAYk</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <StartArguments>OTcwOTA1MDE1ODY4ODc0ODEz.YnCvwg.gsPaKKsZfByGLUrA4kKRwYuoAYk</StartArguments>
+    <StartArguments>OTcwOTA1MDE1ODY4ODc0ODEz.GPZ_jk.QSiH3soZBqUZl7SJLWFL_2Qvt7HoDiBoEKJttI</StartArguments>
   </PropertyGroup>
 </Project>

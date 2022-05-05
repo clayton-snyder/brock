@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Discord.Audio;
+using Microsoft.Extensions.DependencyInjection;
+using Discord.Interactions;
+using brock.Services;
+using System.Collections.Generic;
 
 // TODO: https://makolyte.com/csharp-parsing-commands-and-arguments-in-a-console-app/#Using_CommandLineParser_to_parse_commands_and_arguments
 // TODO: Add slash commands! Self-documenting!
@@ -19,21 +23,55 @@ namespace brock
         public static Task Main(string[] args) => new Program().MainAsync(args);
 
         DiscordSocketClient _client;
+        InteractionService _commands;
 
         public async Task MainAsync(string[] args)
         {
             var token = args[0];
-            _client = new DiscordSocketClient();
-            _client.Log += Log;
 
-            Console.WriteLine("Token: " + token);
-            await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
+            using (var services = ConfigureServices())
+            {
+                //_client = new DiscordSocketClient();
+                _client = services.GetRequiredService<DiscordSocketClient>();
+                _commands = services.GetRequiredService<InteractionService>();
 
-            _client.MessageReceived += HandleMessage;
+                _client.Log += Log;
 
-            // Block task until program is closed
-            await Task.Delay(-1);
+                Console.WriteLine("Token: " + token);
+                await _client.LoginAsync(TokenType.Bot, token);
+                await _client.StartAsync();
+
+                await services.GetRequiredService<CommandHandler>().InitializeAsync();
+
+                _client.MessageReceived += HandleMessage;
+                _client.Ready += ReadyAsync;
+
+                // Block task until program is closed
+                await Task.Delay(-1);
+            }
+        }
+
+        private async Task ReadyAsync()
+        {
+            try
+            {
+                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(252302649884409859);
+                foreach(var cmd in cmds)
+                {
+                    Console.WriteLine(cmd.Name);
+                }
+                Console.WriteLine("FINISHED PRINTING COMMANDS");
+            }
+            catch (Exception ex) { Console.WriteLine($"EXCEPTION registering commands: {ex.Message}"); }
+        }
+
+        private ServiceProvider ConfigureServices()
+        {
+            return new ServiceCollection()
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+                .AddSingleton<CommandHandler>()
+                .BuildServiceProvider();
         }
 
         private Task Log(LogMessage msg)
@@ -58,7 +96,7 @@ namespace brock
             }
         }
 
-        [Command("join", RunMode = RunMode.Async)]
+        [Command("join", RunMode = Discord.Commands.RunMode.Async)]
         private async Task JoinChannel(IVoiceChannel channel = null)
         {
             Console.WriteLine("IN JoinChannel");
