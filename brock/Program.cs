@@ -41,9 +41,11 @@ namespace brock
                 await _client.LoginAsync(TokenType.Bot, token);
                 await _client.StartAsync();
 
+                Console.WriteLine("SHOULD BE ABOUT TO SEE CommandHandler do InitializeAsync()...");
                 await services.GetRequiredService<CommandHandler>().InitializeAsync();
+                Console.WriteLine("Did it do it?");
 
-                _client.MessageReceived += HandleMessage;
+                //_client.MessageReceived += HandleMessage;
                 _client.Ready += ReadyAsync;
 
                 // Block task until program is closed
@@ -53,6 +55,11 @@ namespace brock
 
         private async Task ReadyAsync()
         {
+            Console.WriteLine("Here are the slash commands registered in InteractionService");
+            foreach (var slashCmd in _commands.SlashCommands)
+            {
+                Console.WriteLine(slashCmd);
+            }
             try
             {
                 IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(252302649884409859);
@@ -80,7 +87,7 @@ namespace brock
             return Task.CompletedTask;
         }
 
-        private Task HandleMessage(SocketMessage msg)
+        /*private Task HandleMessage(SocketMessage msg)
         {
             Console.WriteLine(String.Format("{0} said {1}", msg.Author, msg.Content));
             switch (msg.Content.ToLower())
@@ -94,8 +101,9 @@ namespace brock
                 default:
                     return Task.CompletedTask;
             }
-        }
+        }*/
 
+        /*
         [Command("join", RunMode = Discord.Commands.RunMode.Async)]
         private async Task JoinChannel(IVoiceChannel channel = null)
         {
@@ -137,6 +145,6 @@ namespace brock
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             });
-        }
+        }*/
     }
 }

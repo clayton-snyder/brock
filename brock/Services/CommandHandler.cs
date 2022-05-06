@@ -24,6 +24,7 @@ namespace brock.Services
 
         public async Task InitializeAsync()
         {
+            Console.WriteLine("\tCommandHandler.InitializeAsync()");
             // This is adding the "modules" we create (that inherit from InteractionModuleBase<T>) to actually
             // perform command logic. Who knows wtf an Assembly is.
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
@@ -70,6 +71,7 @@ namespace brock.Services
         
         private async Task HandleInteraction(SocketInteraction interaction)
         {
+            Console.WriteLine($"INTERACTION CREATED, in HandleInteraction(). Data: {interaction.Data}");
             IInteractionContext ctx = new SocketInteractionContext(_client, interaction);
             await _commands.ExecuteCommandAsync(ctx, _services);
         }
