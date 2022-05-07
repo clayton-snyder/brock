@@ -92,3 +92,5 @@ C:\Users\Clayton\dev\projects\brock\brock\obj\Debug\brock.csproj.CoreCompileInpu
 C:\Users\Clayton\dev\projects\brock\brock\obj\Debug\brock.csproj.CopyComplete
 C:\Users\Clayton\dev\projects\brock\brock\obj\Debug\brock.exe
 C:\Users\Clayton\dev\projects\brock\brock\obj\Debug\brock.pdb
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\Microsoft.Extensions.DependencyInjection.xml

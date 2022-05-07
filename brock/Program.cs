@@ -27,6 +27,7 @@ namespace brock
 
         public async Task MainAsync(string[] args)
         {
+            Console.WriteLine($"BaseDirectory: {AppContext.BaseDirectory}, TargetFrameworkName: {AppContext.TargetFrameworkName}");
             var token = args[0];
 
             using (var services = ConfigureServices())
@@ -41,8 +42,8 @@ namespace brock
                 await _client.LoginAsync(TokenType.Bot, token);
                 await _client.StartAsync();
 
-                Console.WriteLine("SHOULD BE ABOUT TO SEE CommandHandler do InitializeAsync()...");
-                await services.GetRequiredService<CommandHandler>().InitializeAsync();
+                Console.WriteLine("SHOULD BE ABOUT TO SEE InteractionHandler do InitializeAsync()...");
+                await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 Console.WriteLine("Did it do it?");
 
                 //_client.MessageReceived += HandleMessage;
@@ -65,7 +66,7 @@ namespace brock
                 IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(252302649884409859);
                 foreach(var cmd in cmds)
                 {
-                    Console.WriteLine(cmd.Name);
+                    Console.WriteLine($"Registered {cmd.Name}");
                 }
                 Console.WriteLine("FINISHED PRINTING COMMANDS");
             }
@@ -77,7 +78,7 @@ namespace brock
             return new ServiceCollection()
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<CommandHandler>()
+                .AddSingleton<InteractionHandler>()
                 .BuildServiceProvider();
         }
 
