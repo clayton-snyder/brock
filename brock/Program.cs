@@ -35,6 +35,7 @@ namespace brock
                 //_client = new DiscordSocketClient();
                 _client = services.GetRequiredService<DiscordSocketClient>();
                 _commands = services.GetRequiredService<InteractionService>();
+                
 
                 _client.Log += Log;
 
@@ -45,6 +46,7 @@ namespace brock
                 Console.WriteLine("SHOULD BE ABOUT TO SEE InteractionHandler do InitializeAsync()...");
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 Console.WriteLine("Did it do it?");
+
 
                 //_client.MessageReceived += HandleMessage;
                 _client.Ready += ReadyAsync;

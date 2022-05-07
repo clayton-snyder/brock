@@ -34,5 +34,17 @@ namespace brock.Services
             await RespondAsync($"Ping {input}");
             //return Task.CompletedTask;
         }
+
+        [UserCommand("testUserContextCommand")]
+        public async Task TestUserCtx(IUser user)
+        {
+            await RespondAsync($"User: {user.Discriminator}");
+        }
+
+        [MessageCommand("testMessageContextCommand")]
+        public async Task TestMsgCtx(IMessage msg)
+        {
+            await RespondAsync($"Msg author: {msg.Author}");
+        }
     }
 }
