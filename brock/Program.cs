@@ -35,17 +35,6 @@ namespace brock
             var spotifyClientID = args[2];
             var spotifyClientSecret = args[3];
 
-            /*var spotify = new SpotifyClient(spotifyToken);
-            var track = await spotify.Tracks.Get("1goNp8FZSjak6UHYsawniU");
-            Console.WriteLine($"{track.Name}, {track.Artists[0].Name}");
-            var playlist = await spotify.Playlists.Get("5DY1vU0PD3l6pwOCr7BBpl");
-            Console.WriteLine($"{playlist.Name}, {playlist.Owner.DisplayName}");
-            await spotify.Player.ResumePlayback(new PlayerResumePlaybackRequest
-            {
-                OffsetParam = new PlayerResumePlaybackRequest.Offset { Position = 2 },
-                ContextUri = playlist.Uri
-            });*/
-
             using (var services = ConfigureServices())
             {
                 //_client = new DiscordSocketClient();
@@ -53,7 +42,6 @@ namespace brock
                 _commands = services.GetRequiredService<InteractionService>();
                 _spotify = services.GetRequiredService<SpotifyService>();
                 
-
                 _client.Log += Log;
 
                 Console.WriteLine("Token: " + token);
