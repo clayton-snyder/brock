@@ -48,12 +48,12 @@ namespace brock.Services
             await RespondAsync(ackReplies[new Random().Next(ackReplies.Count - 1)]);
         }
 
-        [SlashCommand("volume", "Set the volume (0-100).")]
-        public async Task Volume(int volume)
+        [SlashCommand("volume", "Set the volume level (0-100).")]
+        public async Task Volume(int level)
         {
             try
             {
-                int cleanVolume = volume < 0 ? 0 : Math.Min(100, volume);
+                int cleanVolume = level < 0 ? 0 : Math.Min(100, level);
                 await Spotify.Client.Player.SetVolume(new SpotifyAPI.Web.PlayerVolumeRequest(cleanVolume));
                 await RespondAsync($"Set volume to: {cleanVolume}");
             }
