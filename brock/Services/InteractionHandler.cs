@@ -24,11 +24,10 @@ namespace brock.Services
 
         public async Task InitializeAsync()
         {
-            Console.WriteLine("InteractionHandler.InitializeAsync()");
+            Console.WriteLine("++InteractionHandler.InitializeAsync()");
             // This is adding the "modules" we create (that inherit from InteractionModuleBase<T>) to actually
             // perform command logic. Who knows wtf an Assembly is.
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-            Console.WriteLine($"Ppong info? {_commands.GetSlashCommandInfo<SlashDevCmdsModule>("Ppong")}");
 
             _client.InteractionCreated += HandleInteraction;
 

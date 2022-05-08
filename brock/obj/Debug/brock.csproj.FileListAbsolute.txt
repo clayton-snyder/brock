@@ -94,3 +94,11 @@ C:\Users\Clayton\dev\projects\brock\brock\obj\Debug\brock.exe
 C:\Users\Clayton\dev\projects\brock\brock\obj\Debug\brock.pdb
 C:\Users\snyde\dev\projects\brock\brock\bin\Debug\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\snyde\dev\projects\brock\brock\bin\Debug\Microsoft.Extensions.DependencyInjection.xml
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\EmbedIO.dll
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\SpotifyAPI.Web.Auth.dll
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\SpotifyAPI.Web.dll
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\Swan.Lite.dll
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\EmbedIO.xml
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\SpotifyAPI.Web.xml
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\SpotifyAPI.Web.Auth.xml
+C:\Users\snyde\dev\projects\brock\brock\bin\Debug\Swan.Lite.xml

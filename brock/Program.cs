@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord.Interactions;
 using brock.Services;
 using System.Collections.Generic;
+using SpotifyAPI.Web;
 
 // TODO: https://makolyte.com/csharp-parsing-commands-and-arguments-in-a-console-app/#Using_CommandLineParser_to_parse_commands_and_arguments
 // TODO: Add slash commands! Self-documenting!
@@ -24,17 +25,33 @@ namespace brock
 
         DiscordSocketClient _client;
         InteractionService _commands;
+        SpotifyService _spotify;
 
         public async Task MainAsync(string[] args)
         {
             Console.WriteLine($"BaseDirectory: {AppContext.BaseDirectory}, TargetFrameworkName: {AppContext.TargetFrameworkName}");
             var token = args[0];
+            var spotifyToken = args[1];
+            var spotifyClientID = args[2];
+            var spotifyClientSecret = args[3];
+
+            /*var spotify = new SpotifyClient(spotifyToken);
+            var track = await spotify.Tracks.Get("1goNp8FZSjak6UHYsawniU");
+            Console.WriteLine($"{track.Name}, {track.Artists[0].Name}");
+            var playlist = await spotify.Playlists.Get("5DY1vU0PD3l6pwOCr7BBpl");
+            Console.WriteLine($"{playlist.Name}, {playlist.Owner.DisplayName}");
+            await spotify.Player.ResumePlayback(new PlayerResumePlaybackRequest
+            {
+                OffsetParam = new PlayerResumePlaybackRequest.Offset { Position = 2 },
+                ContextUri = playlist.Uri
+            });*/
 
             using (var services = ConfigureServices())
             {
                 //_client = new DiscordSocketClient();
                 _client = services.GetRequiredService<DiscordSocketClient>();
                 _commands = services.GetRequiredService<InteractionService>();
+                _spotify = services.GetRequiredService<SpotifyService>();
                 
 
                 _client.Log += Log;
@@ -43,10 +60,8 @@ namespace brock
                 await _client.LoginAsync(TokenType.Bot, token);
                 await _client.StartAsync();
 
-                Console.WriteLine("SHOULD BE ABOUT TO SEE InteractionHandler do InitializeAsync()...");
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
-                Console.WriteLine("Did it do it?");
-
+                await _spotify.InitializeAsync(spotifyClientID, spotifyClientSecret);
 
                 //_client.MessageReceived += HandleMessage;
                 _client.Ready += ReadyAsync;
@@ -81,6 +96,7 @@ namespace brock
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<InteractionHandler>()
+                .AddSingleton<SpotifyService>()
                 .BuildServiceProvider();
         }
 
