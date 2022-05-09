@@ -11,6 +11,7 @@ namespace brock.Services
     {
         public SpotifyService Spotify { get; set; }
         private readonly List<string> ackReplies = new List<string> { "OK!", "Got it!", "Yes!", "No problem!", "Done!" };
+        private static readonly Random random = new Random();
 
         [SlashCommand("player", "Control the music playback.")]
         public async Task Player(
@@ -45,7 +46,7 @@ namespace brock.Services
                 Console.WriteLine($"EXCEPTION in Player command: {ex.Message}");
                 await RespondAsync($"There was an error! {ex.Message}");
             }
-            await RespondAsync(ackReplies[new Random().Next(ackReplies.Count - 1)]);
+            await RespondAsync(ackReplies[random.Next(ackReplies.Count - 1)]);
         }
 
         [SlashCommand("volume", "Set the volume level (0-100).")]

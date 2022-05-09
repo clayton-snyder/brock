@@ -141,9 +141,11 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\SlashPlaybackCmdsModule.cs" />
+    <Compile Include="SlashCmdModules\SlashManageBotCmdsModule.cs" />
+    <Compile Include="SlashCmdModules\SlashPlaybackCmdsModule.cs" />
+    <Compile Include="SlashCmdModules\SlashUtilCmdsModule.cs" />
     <Compile Include="Services\SpotifyService.cs" />
-    <Compile Include="Services\SlashDevCmdsModule.cs" />
+    <Compile Include="SlashCmdModules\SlashDevCmdsModule.cs" />
     <Compile Include="Services\InteractionHandler.cs" />
   </ItemGroup>
   <ItemGroup>
