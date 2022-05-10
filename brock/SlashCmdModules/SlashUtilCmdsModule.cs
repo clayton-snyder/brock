@@ -20,10 +20,16 @@ namespace brock.Services
 
         [SlashCommand("diceroll", "Roll some dice.")]
         public async Task DiceRoll(
-            [MaxValue(100)] [Summary(description:"How many dice to roll?")] int rolls, 
+            [MinValue(1)] [MaxValue(100)] [Summary(description:"How many dice to roll?")] int rolls, 
             [MinValue(1)] [MaxValue(UInt32.MaxValue)] [Summary(description:"How many sides on a die?")] int sides,
             [Summary(description:"Omit embed and output as plain text.")] bool plaintext = false)
         {
+            if (rolls < 1 || rolls > 100 || sides < 1 || sides > UInt32.MaxValue)
+            {
+                await RespondAsync("Invalid parameters.");
+                return;
+            }
+
             int[] results = new int[rolls];
             for (int i = 0; i < results.Length; i++)
             {

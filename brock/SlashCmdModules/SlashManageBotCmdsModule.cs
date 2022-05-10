@@ -26,6 +26,7 @@ namespace brock.SlashCmdModules
             try
             {
                 audioClient = await voiceChannel.ConnectAsync();
+                RespondAsync("Joined?");
             }
             catch (Exception ex)
             {
@@ -41,7 +42,7 @@ namespace brock.SlashCmdModules
                 using (var discord = audioClient.CreatePCMStream(AudioApplication.Music))
                 {
                     Console.WriteLine("Created process and streams, now trying to talk");
-                    try { await output.CopyToAsync(discord); }
+                    try { output.CopyTo(discord); }
                     finally { await discord.FlushAsync(); }
                 }
             }
@@ -55,7 +56,8 @@ namespace brock.SlashCmdModules
             return Process.Start(new ProcessStartInfo
             {
                 FileName = "ffmpeg",
-                Arguments = $"-hide_banner -loglevel panic -f dshow -i {path} -ac 2 -f s16le -ar 48000 pipe:1",
+                //Arguments = $"-hide_banner -loglevel panic -f dshow -i {path} -ac 2 -f s16le -ar 48000 pipe:1",
+                Arguments = $"-hide_banner -loglevel panic -f dshow -i {path} -f wav -ar 48k pipe:1",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             });
