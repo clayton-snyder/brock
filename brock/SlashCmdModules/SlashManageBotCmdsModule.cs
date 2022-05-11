@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Audio;
 using Discord.Interactions;
+using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -61,6 +62,19 @@ namespace brock.SlashCmdModules
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             });
+        }
+
+        [SlashCommand("devices", "(debug) List audio devices.")]
+        public async Task ListDevices()
+        {
+            string response = "";
+            for (int i = -1; i < WaveOut.DeviceCount; i++)
+            {
+                var caps = WaveOut.GetCapabilities(i);
+                response += $"{i}: {caps.ProductName}\n";
+                Console.WriteLine($"{i}: {caps.ProductName}");
+            }
+            await RespondAsync(response);
         }
     }
 }
