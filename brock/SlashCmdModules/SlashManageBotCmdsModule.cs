@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Audio;
 using Discord.Interactions;
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -38,12 +37,12 @@ namespace brock.SlashCmdModules
 
             try
             {
-                using (var ffmpeg = CreateStream("audio=\"Stereo Mix (Realtek(R) Audio)\""))
+                using (var ffmpeg = CreateStream("audio=\"Line 1 (Virtual Audio Cable)\""))
                 using (var output = ffmpeg.StandardOutput.BaseStream)
                 using (var discord = audioClient.CreatePCMStream(AudioApplication.Music))
                 {
                     Console.WriteLine("Created process and streams, now trying to talk");
-                    try { output.CopyTo(discord); }
+                    try { await output.CopyToAsync(discord); }
                     finally { await discord.FlushAsync(); }
                 }
             }
@@ -62,19 +61,6 @@ namespace brock.SlashCmdModules
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             });
-        }
-
-        [SlashCommand("devices", "(debug) List audio devices.")]
-        public async Task ListDevices()
-        {
-            string response = "";
-            for (int i = -1; i < WaveOut.DeviceCount; i++)
-            {
-                var caps = WaveOut.GetCapabilities(i);
-                response += $"{i}: {caps.ProductName}\n";
-                Console.WriteLine($"{i}: {caps.ProductName}");
-            }
-            await RespondAsync(response);
         }
     }
 }
