@@ -1,0 +1,1 @@
+These three binaries need to go in your build output folder. I'm sure there's a way to automate it but I didn't.
