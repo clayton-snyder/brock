@@ -8,6 +8,12 @@ using System.Threading.Tasks;
 
 namespace brock.Services
 {
+    /// <summary>
+    /// Helper functions for interacting with Spotify API through the SpotifyAPI library. Use the pre-wrapped
+    /// helper methods defined here first, but the actual client is exposed (as "Client") if necessary. This 
+    /// class handles all of the auth and token request/refresh internally and should be used as a Singleton
+    /// through the DI framework.
+    /// </summary>
     public class SpotifyService
     {
         private const string REDIRECT_URI = @"http://localhost:5000/brocktch";
@@ -73,6 +79,16 @@ namespace brock.Services
         {
             Console.WriteLine($"SpotifyService authorization error: {error}");
             await _server.Stop();
+        }
+
+
+        /// Pre-wrapped helper methods
+        
+        public async Task<List<FullTrack>> QueryTracksByName(string trackName)
+        {
+            SearchRequest req = new SearchRequest(SearchRequest.Types.Track, trackName);
+            SearchResponse res = await Client.Search.Item(req);
+            return res.Tracks.Items;
         }
     }
 }

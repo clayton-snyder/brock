@@ -1,6 +1,9 @@
-﻿using Discord;
+﻿using brock.Services;
+using Discord;
 using Discord.Audio;
 using Discord.Interactions;
+using Discord.WebSocket;
+using SpotifyAPI.Web;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +15,8 @@ namespace brock.SlashCmdModules
 {
     public class SlashManageBotCmdsModule : InteractionModuleBase<SocketInteractionContext>
     {
+        public SpotifyService Spotify { get; set; }
+
         [SlashCommand("join", "Ask Brock to join the voice channel.", runMode: RunMode.Async)]
         public async Task JoinVoice()
         {
@@ -61,6 +66,29 @@ namespace brock.SlashCmdModules
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             });
+        }
+
+        [SlashCommand("leave", "Ask Brock to stop playing music and leave the voice channel.")]
+        public async Task LeaveVoice()
+        {
+            await Spotify.Client.Player.PausePlayback();
+            foreach (SocketVoiceChannel voiceChannel in Context.Guild.VoiceChannels)
+            {
+                await voiceChannel.DisconnectAsync();
+            }
+            Console.WriteLine("Disconnected from all voice channels.");
+            await RespondAsync("Bye!");
+        }
+
+        // TODO TODO: Test this method! Just queue and skip repeatedly. Might need more logging.
+        [SlashCommand("queue", "jio")]
+        public async Task QueueTrack(
+            [Summary(name:"Track name", description:"Brock will add the first track matching this search term.")] string query)
+        {
+            FullTrack track = (await Spotify.QueryTracksByName(query))[0];
+            await Spotify.Client.Player.AddToQueue(new PlayerAddToQueueRequest(track.Href));
+            Console.WriteLine($"Queued {track.Name} by {track.Artists} thanks to {Context.User.Username}.");
+            await RespondAsync($"Queued {track.Name} by {track.Artists[0].Name}.");
         }
     }
 }
