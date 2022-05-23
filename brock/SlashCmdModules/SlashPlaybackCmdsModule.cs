@@ -1,4 +1,6 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
+using SpotifyAPI.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +65,60 @@ namespace brock.Services
                 Console.WriteLine($"EXCEPTION in Volume command: {ex.Message}");
                 await RespondAsync($"Couldn't set volume: {ex.Message}");
             }
+        }
+
+        // TODO TODO: Test this method! Just queue and skip repeatedly. Might need more logging.
+        [SlashCommand("queue-add", "jio")]
+        public async Task QueueTrack(
+            [Summary(name: "Keyword", description: "Brock will add the first track matching this search term.")] string query)
+        {
+            FullTrack track = (await Spotify.QueryTracksByName(query))[0];
+            await Spotify.Client.Player.AddToQueue(new PlayerAddToQueueRequest(track.Uri));
+            Console.WriteLine($"Queued {track.Name} by {track.Artists} thanks to {Context.User.Username}.");
+            await RespondAsync($"Queued {track.Name} by {track.Artists[0].Name}.");
+        }
+
+        [SlashCommand("search", "Searches spotify for tracks matching the search phrase.")]
+        public async Task Search(string query)
+        {
+            List<FullTrack> tracks = await Spotify.QueryTracksByName(query);
+            Console.WriteLine($"Search(\"{query}\"): got {tracks.Count} results.");
+
+            foreach (FullTrack track in tracks)
+            {
+                Console.WriteLine(track);
+                Console.WriteLine($"(((manual))) {track.Name} -- {track.Artists[0]} --- href={track.Href}, id={track.Id}, uri={track.Uri}");
+            }
+
+            //var resultsMenuBuilder = new SelectMenuBuilder().WithPlaceholder("Select a result to queue it!");
+
+            if (tracks.Count <= 0)
+            {
+                await RespondAsync($"No results found for {query}.", ephemeral: true);
+                Console.WriteLine("HOW HOW HOW>???");
+            }
+            if (tracks.Count <= 0)
+            {
+                await RespondAsync("WTF???");
+                Console.WriteLine("Okay this is BAD AND WEIRD");
+            }
+
+            List<SelectMenuOptionBuilder> options = new List<SelectMenuOptionBuilder>();
+            foreach (FullTrack track in tracks)
+            {
+                options.Add(new SelectMenuOptionBuilder($"{TrackToString(track)}", track.Uri));
+            }
+            var resultsMenuBuilder = new SelectMenuBuilder().WithCustomId("menu1").WithPlaceholder("Select a result to queue it!").WithOptions(options);
+
+            await RespondAsync(
+                "Search Results", 
+                components: new ComponentBuilder().WithSelectMenu(resultsMenuBuilder).Build(), 
+                ephemeral: true);
+        }
+
+        private string TrackToString(FullTrack track)
+        {
+            return $"'{track.Name}' -- {String.Join(", ", track.Artists.Select(artist => artist.Name))}";
         }
     }
 }

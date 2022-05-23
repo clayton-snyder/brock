@@ -40,9 +40,11 @@ namespace brock.SlashCmdModules
                 return;
             }
 
+            string micInput = "\"Line 1 (Virtual Audio Cable)\"";
+            //string micInput = ""
             try
             {
-                using (var ffmpeg = CreateStream("audio=\"Line 1 (Virtual Audio Cable)\""))
+                using (var ffmpeg = CreateStream($"audio={micInput}"))
                 using (var output = ffmpeg.StandardOutput.BaseStream)
                 using (var discord = audioClient.CreatePCMStream(AudioApplication.Music))
                 {
@@ -78,17 +80,6 @@ namespace brock.SlashCmdModules
             }
             Console.WriteLine("Disconnected from all voice channels.");
             await RespondAsync("Bye!");
-        }
-
-        // TODO TODO: Test this method! Just queue and skip repeatedly. Might need more logging.
-        [SlashCommand("queue", "jio")]
-        public async Task QueueTrack(
-            [Summary(name:"Track name", description:"Brock will add the first track matching this search term.")] string query)
-        {
-            FullTrack track = (await Spotify.QueryTracksByName(query))[0];
-            await Spotify.Client.Player.AddToQueue(new PlayerAddToQueueRequest(track.Href));
-            Console.WriteLine($"Queued {track.Name} by {track.Artists} thanks to {Context.User.Username}.");
-            await RespondAsync($"Queued {track.Name} by {track.Artists[0].Name}.");
         }
     }
 }

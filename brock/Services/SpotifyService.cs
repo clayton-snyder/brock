@@ -83,7 +83,6 @@ namespace brock.Services
 
 
         /// Pre-wrapped helper methods
-        
         public async Task<List<FullTrack>> QueryTracksByName(string trackName)
         {
             SearchRequest req = new SearchRequest(SearchRequest.Types.Track, trackName);

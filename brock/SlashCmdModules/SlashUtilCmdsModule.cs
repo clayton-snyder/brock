@@ -24,7 +24,7 @@ namespace brock.Services
             [MinValue(1)] [MaxValue(UInt32.MaxValue)] [Summary(description:"How many sides on a die?")] int sides,
             [Summary(description:"Omit embed and output as plain text.")] bool plaintext = false)
         {
-            if (rolls < 1 || rolls > 100 || sides < 1 || sides > UInt32.MaxValue)
+            if (rolls < 1 || rolls > 100 || sides < 1)
             {
                 await RespondAsync("Invalid parameters.");
                 return;
