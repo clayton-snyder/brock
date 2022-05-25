@@ -32,8 +32,7 @@ namespace brock.Services
             _client.InteractionCreated += HandleInteraction;
 
             _commands.SlashCommandExecuted += SlashCommandExecuted;
-            //_commands.ContextCommandExecuted += ContextCommandExecuted;
-            //_commands.ComponentCommandExecuted += ComponentCommandExecuted;
+            
 
         }
 

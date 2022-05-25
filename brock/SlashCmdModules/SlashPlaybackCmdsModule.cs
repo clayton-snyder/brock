@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using SpotifyAPI.Web;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ namespace brock.Services
     public class SlashPlaybackCmdsModule : InteractionModuleBase<SocketInteractionContext>
     {
         public SpotifyService Spotify { get; set; }
+        public DiscordSocketClient client { get; set; }
         private readonly List<string> ackReplies = new List<string> { "OK!", "Got it!", "Yes!", "No problem!", "Done!" };
         private static readonly Random random = new Random();
 
@@ -84,31 +86,19 @@ namespace brock.Services
             List<FullTrack> tracks = await Spotify.QueryTracksByName(query);
             Console.WriteLine($"Search(\"{query}\"): got {tracks.Count} results.");
 
-            foreach (FullTrack track in tracks)
-            {
-                Console.WriteLine(track);
-                Console.WriteLine($"(((manual))) {track.Name} -- {track.Artists[0]} --- href={track.Href}, id={track.Id}, uri={track.Uri}");
-            }
-
-            //var resultsMenuBuilder = new SelectMenuBuilder().WithPlaceholder("Select a result to queue it!");
-
             if (tracks.Count <= 0)
             {
                 await RespondAsync($"No results found for {query}.", ephemeral: true);
-                Console.WriteLine("HOW HOW HOW>???");
-            }
-            if (tracks.Count <= 0)
-            {
-                await RespondAsync("WTF???");
-                Console.WriteLine("Okay this is BAD AND WEIRD");
+                return;
             }
 
             List<SelectMenuOptionBuilder> options = new List<SelectMenuOptionBuilder>();
             foreach (FullTrack track in tracks)
             {
-                options.Add(new SelectMenuOptionBuilder($"{TrackToString(track)}", track.Uri));
+                Dictionary<string, string> trackStrings = TrackStrings(track, 100);
+                options.Add(new SelectMenuOptionBuilder($"{trackStrings["name"]}", track.Uri, $"{trackStrings["artists"]}"));
             }
-            var resultsMenuBuilder = new SelectMenuBuilder().WithCustomId("menu1").WithPlaceholder("Select a result to queue it!").WithOptions(options);
+            var resultsMenuBuilder = new SelectMenuBuilder().WithCustomId("search-results").WithPlaceholder("Select a result to queue it!").WithOptions(options);
 
             await RespondAsync(
                 "Search Results", 
@@ -116,9 +106,53 @@ namespace brock.Services
                 ephemeral: true);
         }
 
-        private string TrackToString(FullTrack track)
+        /// <summary>
+        /// Don't pass less than 4 as maxLength or else it will be ignored.
+        /// This is because you need at least 3 characters for "...", plus one character to be meaningful.
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="maxLength"></param>
+        /// <returns>One string with track name and artists.</returns>
+        private string TrackToString(FullTrack track, int maxLength = 0)
         {
-            return $"'{track.Name}' -- {String.Join(", ", track.Artists.Select(artist => artist.Name))}";
+            string str = $"'{track.Name}' -- {String.Join(", ", track.Artists.Select(artist => artist.Name))}";
+            if (str.Length >= maxLength && maxLength > 3)
+            {
+                str = str.Substring(0, maxLength - 3) + "...";
+            }
+            return str;
+        }
+
+        /// <summary>
+        /// Returns a Dictionary with strings that are parsed from the track and abbreviated according
+        /// to maxLength. Values less than 4 of maxLength will be ignored. Note that if a string exceeds
+        /// maxLength, it is truncated and the last three characters replaced with "...".
+        /// NOTE: maxLength does NOT apply to trackUri, otherwise it would not function as a URI :)
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="maxLength"></param>
+        /// <returns>Dictionary<string, string> with keys "name", "artists", and "uri".</returns>
+        private Dictionary<string, string> TrackStrings(FullTrack track, int maxLength = 0)
+        {
+            Dictionary<string, string> result = new Dictionary<string, string>();
+            string name = track.Name;
+            string artists = String.Join(", ", track.Artists.Select(artist => artist.Name));
+
+            if (name.Length >= maxLength && maxLength > 3)
+            {
+                name = name.Substring(0, maxLength - 3) + "...";
+            }
+
+            if (artists.Length >= maxLength && maxLength > 3)
+            {
+                artists = artists.Substring(0, maxLength - 3) + "...";
+            }
+
+
+            result.Add("name", name);
+            result.Add("artists", artists);
+            result.Add("uri", track.Uri);
+            return result;
         }
     }
 }

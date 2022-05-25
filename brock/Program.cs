@@ -13,6 +13,7 @@ using Discord.Interactions;
 using brock.Services;
 using System.Collections.Generic;
 using SpotifyAPI.Web;
+using brock.Handlers;
 
 // TODO: https://makolyte.com/csharp-parsing-commands-and-arguments-in-a-console-app/#Using_CommandLineParser_to_parse_commands_and_arguments
 // TODO: Add slash commands! Self-documenting!
@@ -49,6 +50,7 @@ namespace brock
                 await _client.StartAsync();
 
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
+                await services.GetRequiredService<SelectMenuHandlers>().InitializeAsync();
                 await _spotify.InitializeAsync(spotifyClientID, spotifyClientSecret);
 
                 //_client.MessageReceived += HandleMessage;
@@ -88,6 +90,7 @@ namespace brock
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<InteractionHandler>()
+                .AddSingleton<SelectMenuHandlers>()
                 .AddSingleton<SpotifyService>()
                 .BuildServiceProvider();
         }

@@ -89,5 +89,10 @@ namespace brock.Services
             SearchResponse res = await Client.Search.Item(req);
             return res.Tracks.Items;
         }
+
+        public async Task QueueTrack(string trackUri)
+        {
+            await Client.Player.AddToQueue(new PlayerAddToQueueRequest(trackUri));
+        }
     }
 }
