@@ -21,9 +21,20 @@ namespace brock.Services
         private string _clientSecret;
         public SpotifyClient Client;
         private EmbedIOAuthServer _server;
+        private readonly ConfigService _config;
+
+        public SpotifyService(ConfigService config = null)
+        {
+            if (config == null)
+            {
+                throw new ArgumentNullException("config");
+            }
+            _config = config;
+        }
 
         public async Task InitializeAsync(string clientID, string clientSecret)
         {
+            Console.WriteLine($"IN SPOTIFYSERVICE: KeyOne={_config.Get<int>("KeyOne")}");
             Console.WriteLine($"++SpotifyService.InitializeAsync(), " +
                 $"clientID.Length={clientID.Length}, clientSecret.Length={clientSecret.Length}");
             _clientID = clientID;

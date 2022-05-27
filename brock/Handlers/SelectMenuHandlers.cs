@@ -19,7 +19,7 @@ namespace brock.Handlers
             _spotify = spotify;
         }
 
-        public async Task InitializeAsync()
+        public void Initialize()
         {
             _socketClient.SelectMenuExecuted += SelectMenuExecuted;
         }
