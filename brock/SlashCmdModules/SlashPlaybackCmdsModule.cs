@@ -60,6 +60,7 @@ namespace brock.Services
                         var summaryEmbed = new EmbedBuilder { Title = $"Currently Playing" };
                         summaryEmbed.AddField("Track", track.Name);
                         summaryEmbed.AddField("Artist", $"{String.Join(", ", track.Artists.Select(a => a.Name))}");
+                        summaryEmbed.AddField("Album", $"{track.Album.Name}");
                         summaryEmbed.AddField("Progress", $"{TimeSpanString(progress)}  /  {TimeSpanString(duration)}");
                         summaryEmbed.WithCurrentTimestamp().WithColor(Color.Blue);
                         await RespondAsync(embed: summaryEmbed.Build());
@@ -88,8 +89,7 @@ namespace brock.Services
             return $"{padMins}:{padSecs}";
         }
 
-        [SlashCommand("volume", "Set the volume level (0-100). This will affect volume for everyone; you can adjust volume " +
-            "for just yourself by right-clicking Brock in the voice channel and adjusting the \"User Volume\" slider.")]
+        [SlashCommand("volume", "Set the volume level (0-100). This will affect volume for everyone.")]
         public async Task Volume(int level)
         {
             try
@@ -113,7 +113,7 @@ namespace brock.Services
             FullTrack track = (await Spotify.QueryTracksByName(query))[0];
             await Spotify.Client.Player.AddToQueue(new PlayerAddToQueueRequest(track.Uri));
             Console.WriteLine($"Queued {track.Name} by {track.Artists} thanks to {Context.User.Username}.");
-            await RespondAsync($"Queued {track.Name} by {track.Artists[0].Name}.");
+            await RespondAsync($"{Context.User.Username} queued *{track.Name}* by {track.Artists[0].Name}.");
         }
 
         [SlashCommand("search", "Search Spotify for tracks matching a phrase. You can select a result to queue it.")]
