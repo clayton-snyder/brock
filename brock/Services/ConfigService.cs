@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace brock.Services
 {
@@ -12,13 +10,14 @@ namespace brock.Services
         private IConfiguration _config;
         public void Initialize()
         {
+            Console.WriteLine("[[ ConfigService.Initialize() ]]");
+
             IHost host = Host.CreateDefaultBuilder().Build();
             _config = host.Services.GetRequiredService<IConfiguration>();
-            Console.WriteLine("Config loaded:");
-            foreach (KeyValuePair<string, string> pair in _config.AsEnumerable())
-            {
-                Console.WriteLine($"\t{pair.Key}={pair.Value}");
-            }
+            //foreach (KeyValuePair<string, string> pair in _config.AsEnumerable())
+            //{
+            //    Console.WriteLine($"\t{pair.Key}={pair.Value}");
+            //}
         }
 
         public T Get<T>(string key)

@@ -1,9 +1,7 @@
 ﻿using brock.Services;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace brock.Handlers
@@ -21,6 +19,8 @@ namespace brock.Handlers
 
         public void Initialize()
         {
+            Console.WriteLine("[[ SelectMenuHandler.Initialize() ]]");
+
             _socketClient.SelectMenuExecuted += SelectMenuExecuted;
         }
 

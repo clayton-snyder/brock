@@ -1,9 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace brock.Services
@@ -17,7 +14,6 @@ namespace brock.Services
 
         public SlashDevCmdsModule(InteractionHandler handler)
         {
-            Console.WriteLine("SlashCommands constructor");
             _handler = handler;
         }
 

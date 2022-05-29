@@ -1,62 +1,53 @@
-﻿using Discord;
+﻿using brock.Services;
+using brock.Handlers;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
-using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using Discord.Audio;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Discord.Interactions;
-using brock.Services;
-using SpotifyAPI.Web;
-using brock.Handlers;
-using Microsoft.Extensions.Configuration;
 
-// TODO: https://makolyte.com/csharp-parsing-commands-and-arguments-in-a-console-app/#Using_CommandLineParser_to_parse_commands_and_arguments
-// TODO: Add slash commands! Self-documenting!
-// TODO: Can the bin stuff be automated?
+
 namespace brock
 {
     internal class Program
     {
         public static Task Main(string[] args) => new Program().MainAsync(args);
 
+        ConfigService _config;
         DiscordSocketClient _client;
         InteractionService _commands;
         SpotifyService _spotify;
 
         public async Task MainAsync(string[] args)
         {
-            Console.WriteLine($"BaseDirectory: {AppContext.BaseDirectory}, TargetFrameworkName: {AppContext.TargetFrameworkName}");
-            var token = args[0];
-            var spotifyToken = args[1];
-            var spotifyClientID = args[2];
-            var spotifyClientSecret = args[3];
-
+            Console.WriteLine($"In the beginning, God created the heavens and the earth.\n");
             using (var services = ConfigureServices())
             {
-                //_client = new DiscordSocketClient();
+                // Have to load ConfigService first since we get Discord token from it
+                _config = services.GetRequiredService<ConfigService>();
+                _config.Initialize();
+                string discordToken = _config.Get<string>("DiscordToken");
+                string spotifyClientID = _config.Get<string>("SpotifyClientID");
+                string spotifyClientSecret = _config.Get<string>("SpotifyClientSecret");
+                Console.WriteLine($"**Loaded from config:\n" +
+                    $"\tDiscordToken:{discordToken}, " +
+                    $"\n\tSpotifyClientID:{spotifyClientID}, " +
+                    $"\n\tSpotifyClientSecret:{spotifyClientSecret}");
+
                 _client = services.GetRequiredService<DiscordSocketClient>();
                 _commands = services.GetRequiredService<InteractionService>();
                 _spotify = services.GetRequiredService<SpotifyService>();
-                
-                _client.Log += Log;
 
-                Console.WriteLine("Token: " + token);
-                await _client.LoginAsync(TokenType.Bot, token);
-                await _client.StartAsync();
-
-                services.GetRequiredService<ConfigService>().Initialize();
-                await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 services.GetRequiredService<SelectMenuHandlers>().Initialize();
-                await _spotify.InitializeAsync(spotifyClientID, spotifyClientSecret);
+                await services.GetRequiredService<InteractionHandler>().InitializeAsync();
+                await _spotify.InitializeAsync();
 
-                //_client.MessageReceived += HandleMessage;
                 _client.Ready += ReadyAsync;
+                await _client.LoginAsync(TokenType.Bot, discordToken);
+                await _client.StartAsync();
 
                 // Block task until program is closed
                 await Task.Delay(-1);
@@ -65,22 +56,18 @@ namespace brock
 
         private async Task ReadyAsync()
         {
-            Console.WriteLine("Here are the slash commands registered in InteractionService");
-            foreach (var slashCmd in _commands.SlashCommands)
-            {
-                Console.WriteLine(slashCmd);
-            }
             try
             {
-                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(252302649884409859);
-                foreach(var cmd in cmds)
+                foreach (SocketGuild guild in _client.Guilds)
                 {
-                    Console.WriteLine($"Registered {cmd.Name}");
+                    Console.Write($"**Registering commands for: {guild.Name} - {guild.Description} - {guild.Id}... ");
+                    IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(guild.Id);
+                    Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))}");
                 }
-                Console.WriteLine("FINISHED PRINTING COMMANDS");
+                Console.WriteLine("**Finished registering commands.");
             }
             catch (Exception ex) { 
-                Console.WriteLine($"EXCEPTION registering commands: {ex.Message}"); 
+                Console.WriteLine($"\n**EXCEPTION registering commands: {ex.Message}"); 
                 Console.WriteLine(ex.StackTrace);
                 Console.WriteLine(ex.HelpLink);
             }
@@ -97,27 +84,5 @@ namespace brock
                 .AddSingleton<SpotifyService>()
                 .BuildServiceProvider();
         }
-
-        private Task Log(LogMessage msg)
-        {
-            Console.WriteLine(msg.ToString());
-            return Task.CompletedTask;
-        }
-
-        /*private Task HandleMessage(SocketMessage msg)
-        {
-            Console.WriteLine(String.Format("{0} said {1}", msg.Author, msg.Content));
-            switch (msg.Content.ToLower())
-            {
-                case "ping":
-                    return msg.Channel.SendMessageAsync("pong");
-                case "voice":
-                    JoinChannel((msg.Author as IGuildUser).VoiceChannel);
-                    Console.WriteLine("AFTER JoinChannel");
-                    return Task.CompletedTask;
-                default:
-                    return Task.CompletedTask;
-            }
-        }*/
     }
 }

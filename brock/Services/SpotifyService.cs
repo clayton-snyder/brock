@@ -2,8 +2,6 @@
 using SpotifyAPI.Web.Auth;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace brock.Services
@@ -16,12 +14,13 @@ namespace brock.Services
     /// </summary>
     public class SpotifyService
     {
-        private const string REDIRECT_URI = @"http://localhost:5000/brocktch";
-        private string _clientID;
-        private string _clientSecret;
         public SpotifyClient Client;
         private EmbedIOAuthServer _server;
         private readonly ConfigService _config;
+
+        private string _clientID;
+        private string _clientSecret;
+        private string _redirectUri;
 
         public SpotifyService(ConfigService config = null)
         {
@@ -32,20 +31,20 @@ namespace brock.Services
             _config = config;
         }
 
-        public async Task InitializeAsync(string clientID, string clientSecret)
+        public async Task InitializeAsync()
         {
-            Console.WriteLine($"IN SPOTIFYSERVICE: KeyOne={_config.Get<int>("KeyOne")}");
-            Console.WriteLine($"++SpotifyService.InitializeAsync(), " +
-                $"clientID.Length={clientID.Length}, clientSecret.Length={clientSecret.Length}");
-            _clientID = clientID;
-            _clientSecret = clientSecret;
-            _server = new EmbedIOAuthServer(new Uri(REDIRECT_URI), 5000);
+            Console.WriteLine("[[ SpotifyService.InitializeAsync() ]]");
+
+            _clientID = _config.Get<string>("SpotifyClientID");
+            _clientSecret = _config.Get<string>("SpotifyClientSecret");
+            _redirectUri = _config.Get<string>("SpotifyRedirectURI");
+            _server = new EmbedIOAuthServer(new Uri(_redirectUri), 5000);
             await _server.Start();
 
             _server.AuthorizationCodeReceived += OnAuthorizationCodeReceived;
             _server.ErrorReceived += OnErrorReceived;
 
-            var loginReq = new LoginRequest(_server.BaseUri, clientID, LoginRequest.ResponseType.Code)
+            var loginReq = new LoginRequest(_server.BaseUri, _clientID, LoginRequest.ResponseType.Code)
             {
                 Scope = new List<string> { 
                     Scopes.UserReadPlaybackState,
@@ -68,7 +67,7 @@ namespace brock.Services
             // Exchange our code response for a token
             var tokenResponse = await new OAuthClient().RequestToken(
                 new AuthorizationCodeTokenRequest(
-                    _clientID, _clientSecret, response.Code, new Uri(REDIRECT_URI)
+                    _clientID, _clientSecret, response.Code, new Uri(_redirectUri)
                 )
             );
 
