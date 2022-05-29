@@ -2,6 +2,7 @@
 using SpotifyAPI.Web.Auth;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace brock.Services
@@ -92,17 +93,26 @@ namespace brock.Services
         }
 
 
-        /// Pre-wrapped helper methods
-        public async Task<List<FullTrack>> QueryTracksByName(string trackName)
+        public async Task<List<FullTrack>> QueryTracksByName(string trackName, int max = 20)
         {
+            max = max > 20 ? 20 : max;
             SearchRequest req = new SearchRequest(SearchRequest.Types.Track, trackName);
             SearchResponse res = await Client.Search.Item(req);
+            if (res.Tracks.Items.Count > max)
+            {
+                return res.Tracks.Items.Take(max).ToList();
+            }
             return res.Tracks.Items;
         }
 
         public async Task QueueTrack(string trackUri)
         {
             await Client.Player.AddToQueue(new PlayerAddToQueueRequest(trackUri));
+        }
+
+        public async Task<FullTrack> GetTrackByUri(string trackId)
+        {
+            return await Client.Tracks.Get(trackId);
         }
     }
 }

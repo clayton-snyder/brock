@@ -12,6 +12,11 @@ using System.Threading.Tasks;
 
 namespace brock
 {
+    /*
+     * NEXT IDES
+     * -Keep updating Currently Playing embed? At least click-to-refresh message context option?
+     * -Context menu options for pause, skip, play, leave voice
+     * */
     internal class Program
     {
         public static Task Main(string[] args) => new Program().MainAsync(args);

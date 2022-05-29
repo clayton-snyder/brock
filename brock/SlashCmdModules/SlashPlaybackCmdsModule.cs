@@ -13,15 +13,27 @@ namespace brock.Services
     {
         public SpotifyService Spotify { get; set; }
         public DiscordSocketClient client { get; set; }
+        private readonly ConfigService _config;
+
         private readonly List<string> ackReplies = new List<string> { "OK!", "Got it!", "Yes!", "No problem!", "Done!" };
         private static readonly Random random = new Random();
+
+        public SlashPlaybackCmdsModule(ConfigService config)
+        {
+            if (config == null)
+            {
+                throw new ArgumentNullException("config");
+            }
+            _config = config;
+        }
 
         [SlashCommand("player", "Control the music playback.")]
         public async Task Player(
             [Choice("play", "play"),
             Choice("pause", "pause"), 
             Choice("skip", "skip"),
-            Choice("back", "back")] string action)
+            Choice("back", "back"),
+            Choice("show", "show")] string action)
         {
             try
             {
@@ -39,6 +51,20 @@ namespace brock.Services
                     case "back":
                         await Spotify.Client.Player.SkipPrevious();
                         break;
+                    case "show":
+                        CurrentlyPlayingContext playbackContext = await Spotify.Client.Player.GetCurrentPlayback();
+                        FullTrack track = (FullTrack) playbackContext.Item;
+                        //int remainingMs = track.DurationMs - playbackContext.ProgressMs;
+                        TimeSpan progress = TimeSpan.FromMilliseconds(playbackContext.ProgressMs);
+                        TimeSpan duration = TimeSpan.FromMilliseconds(track.DurationMs);
+
+                        var summaryEmbed = new EmbedBuilder { Title = $"Currently Playing" };
+                        summaryEmbed.AddField("Track", track.Name);
+                        summaryEmbed.AddField("Artist", $"{String.Join(", ", track.Artists.Select(a => a.Name))}");
+                        summaryEmbed.AddField("Progress", $"{TimeSpanString(progress)}  /  {TimeSpanString(duration)}");
+                        summaryEmbed.WithCurrentTimestamp().WithColor(Color.Blue);
+                        await RespondAsync(embed: summaryEmbed.Build());
+                        return;
                     default:
                         Console.WriteLine($"Unknown action '{action}'...");
                         break;
@@ -50,6 +76,17 @@ namespace brock.Services
                 await RespondAsync($"There was an error! {ex.Message}");
             }
             await RespondAsync(ackReplies[random.Next(ackReplies.Count - 1)]);
+        }
+
+        private string TimeSpanString(TimeSpan t)
+        {
+            string padDays = $"{t.Days}".PadLeft(2, '0');
+            string padHours = $"{t.Hours}".PadLeft(2, '0');
+            string padMins = $"{t.Minutes}".PadLeft(2, '0');
+            string padSecs = $"{t.Seconds}".PadLeft(2, '0');
+            if (t.Days > 0) return $"{padDays}:{padHours}:{padMins}:{padSecs}";
+            if (t.Hours > 0) return $"{padHours}:{padMins}:{padSecs}";
+            return $"{padMins}:{padSecs}";
         }
 
         [SlashCommand("volume", "Set the volume level (0-100).")]
@@ -80,9 +117,9 @@ namespace brock.Services
         }
 
         [SlashCommand("search", "Searches spotify for tracks matching the search phrase.")]
-        public async Task Search(string query)
+        public async Task Search(string query, [MinValue(1)] [MaxValue(20)] int maxResults = 5)
         {
-            List<FullTrack> tracks = await Spotify.QueryTracksByName(query);
+            List<FullTrack> tracks = await Spotify.QueryTracksByName(query, maxResults);
             Console.WriteLine($"Search(\"{query}\"): got {tracks.Count} results.");
 
             if (tracks.Count <= 0)
@@ -94,8 +131,10 @@ namespace brock.Services
             List<SelectMenuOptionBuilder> options = new List<SelectMenuOptionBuilder>();
             foreach (FullTrack track in tracks)
             {
+                // Strangely, you can only pass a string as a MenuOption value, so we have to delimit that value so that
+                // the menu selection handler can parse URI, title, and artists
                 Dictionary<string, string> trackStrings = TrackStrings(track, 100);
-                options.Add(new SelectMenuOptionBuilder($"{trackStrings["name"]}", track.Uri, $"{trackStrings["artists"]}"));
+                options.Add(new SelectMenuOptionBuilder($"{trackStrings["name"]}", track.Id, $"{trackStrings["artists"]}"));
             }
             var resultsMenuBuilder = new SelectMenuBuilder().WithCustomId("search-results").WithPlaceholder("Select a result to queue it!").WithOptions(options);
 
