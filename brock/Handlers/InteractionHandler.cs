@@ -2,10 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace brock.Services
@@ -29,12 +26,8 @@ namespace brock.Services
             // This is adding the "modules" we create (that inherit from InteractionModuleBase<T>) to actually
             // perform command logic. Who knows wtf an Assembly is.
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-
             _client.InteractionCreated += HandleInteraction;
-
             _commands.SlashCommandExecuted += SlashCommandExecuted;
-            
-
         }
 
         private Task SlashCommandExecuted(SlashCommandInfo info, IInteractionContext ctx, IResult result)
@@ -50,7 +43,6 @@ namespace brock.Services
             {
                 Console.WriteLine($"INTERACTION CREATED, in HandleInteraction(). Type: {interaction.Type}");
                 IInteractionContext ctx = new SocketInteractionContext(_client, interaction);
-                Console.WriteLine($"Calling ExecuteCommandAsync from InteractionHandler.HandleInteraction...");
                 await _commands.ExecuteCommandAsync(ctx, _services);
             }
             catch (Exception ex)

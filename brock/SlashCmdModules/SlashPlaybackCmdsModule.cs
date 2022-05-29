@@ -54,7 +54,6 @@ namespace brock.Services
                     case "show":
                         CurrentlyPlayingContext playbackContext = await Spotify.Client.Player.GetCurrentPlayback();
                         FullTrack track = (FullTrack) playbackContext.Item;
-                        //int remainingMs = track.DurationMs - playbackContext.ProgressMs;
                         TimeSpan progress = TimeSpan.FromMilliseconds(playbackContext.ProgressMs);
                         TimeSpan duration = TimeSpan.FromMilliseconds(track.DurationMs);
 
@@ -89,7 +88,8 @@ namespace brock.Services
             return $"{padMins}:{padSecs}";
         }
 
-        [SlashCommand("volume", "Set the volume level (0-100).")]
+        [SlashCommand("volume", "Set the volume level (0-100). This will affect volume for everyone; you can adjust volume " +
+            "for just yourself by right-clicking Brock in the voice channel and adjusting the \"User Volume\" slider.")]
         public async Task Volume(int level)
         {
             try
@@ -106,9 +106,9 @@ namespace brock.Services
         }
 
         // TODO TODO: Test this method! Just queue and skip repeatedly. Might need more logging.
-        [SlashCommand("queue-add", "jio")]
+        [SlashCommand("qq", "Quick queue - add the first track matching a search phrase to the queue.")]
         public async Task QueueTrack(
-            [Summary(name: "Keyword", description: "Brock will add the first track matching this search term.")] string query)
+            [Summary(name: "query", description: "Brock will add the first track matching this search term.")] string query)
         {
             FullTrack track = (await Spotify.QueryTracksByName(query))[0];
             await Spotify.Client.Player.AddToQueue(new PlayerAddToQueueRequest(track.Uri));
@@ -116,7 +116,7 @@ namespace brock.Services
             await RespondAsync($"Queued {track.Name} by {track.Artists[0].Name}.");
         }
 
-        [SlashCommand("search", "Searches spotify for tracks matching the search phrase.")]
+        [SlashCommand("search", "Search Spotify for tracks matching a phrase. You can select a result to queue it.")]
         public async Task Search(string query, [MinValue(1)] [MaxValue(20)] int maxResults = 5)
         {
             List<FullTrack> tracks = await Spotify.QueryTracksByName(query, maxResults);
@@ -176,16 +176,8 @@ namespace brock.Services
             string name = track.Name;
             string artists = String.Join(", ", track.Artists.Select(artist => artist.Name));
 
-            if (name.Length >= maxLength && maxLength > 3)
-            {
-                name = name.Substring(0, maxLength - 3) + "...";
-            }
-
-            if (artists.Length >= maxLength && maxLength > 3)
-            {
-                artists = artists.Substring(0, maxLength - 3) + "...";
-            }
-
+            if (name.Length >= maxLength && maxLength > 3) name = name.Substring(0, maxLength - 3) + "...";
+            if (artists.Length >= maxLength && maxLength > 3) artists = artists.Substring(0, maxLength - 3) + "...";
 
             result.Add("name", name);
             result.Add("artists", artists);
