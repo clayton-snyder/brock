@@ -39,7 +39,7 @@ namespace brock.Services
 
             if (plaintext)
             {
-                await RespondAsync($"Total: {total}, Rolls: {rollsString}");
+                await RespondAsync($"{Context.User.Username} rolled {rolls} {sides}-sided dice. **Total**: {total}, **Rolls**: {rollsString}");
                 return;
             }
 
@@ -47,6 +47,7 @@ namespace brock.Services
             //string mode = $"{groupedRolls.First().Key} rolled {groupedRolls.First().Count()} times.";
 
             var summaryEmbed = new EmbedBuilder { Title = $"{Context.User.Username}'s Dice Roll Results" };
+            summaryEmbed.Description = $"{Context.User.Username} rolled {rolls} {sides}-sided dice.";
             summaryEmbed.AddField("Total", results.Sum());
             summaryEmbed.AddField("Max / Min roll", $"{results.Max()} / {results.Min()}");
             summaryEmbed.AddField("Rolls", String.Join(", ", results));

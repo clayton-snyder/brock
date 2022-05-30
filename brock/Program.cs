@@ -68,6 +68,7 @@ namespace brock
                     Console.Write($"**Registering commands for: {guild.Name} - {guild.Description} - {guild.Id}... ");
                     IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(guild.Id);
                     Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))}");
+                    Console.WriteLine($"From the command service: {String.Join(", ", _commands.SlashCommands.Select(cmd => cmd.Name))}");
                 }
                 Console.WriteLine("**Finished registering commands.");
             }
