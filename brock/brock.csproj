@@ -281,6 +281,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Blackjack\BlackjackGame.cs" />
+    <Compile Include="Blackjack\BlackjackService.cs" />
+    <Compile Include="Blackjack\SlashBlackjackCmdsModule.cs" />
     <Compile Include="Handlers\SelectMenuHandlers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
