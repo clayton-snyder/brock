@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace brock.Blackjack
 {
-    internal class SlashBlackjackCmdsModule
+    public class SlashBlackjackCmdsModule
     {
+        // hit
+
+        // stand
+
+        // show
     }
 }

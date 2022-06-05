@@ -283,6 +283,8 @@
   <ItemGroup>
     <Compile Include="Blackjack\BlackjackGame.cs" />
     <Compile Include="Blackjack\BlackjackService.cs" />
+    <Compile Include="Blackjack\Card.cs" />
+    <Compile Include="Blackjack\Deck.cs" />
     <Compile Include="Blackjack\SlashBlackjackCmdsModule.cs" />
     <Compile Include="Handlers\SelectMenuHandlers.cs" />
     <Compile Include="Program.cs" />

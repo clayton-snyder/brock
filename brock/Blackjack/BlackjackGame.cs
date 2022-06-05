@@ -8,6 +8,10 @@ namespace brock.Blackjack
 {
     internal class BlackjackGame
     {
+        private const ushort TargetScore = 21;
+        private const ushort DealerStandScore = 17;
+        private const string LP = "[BLACKJACK - BlackjackGame]";  // Log prefix
+
         /// <summary>
         /// None means the current state of the game is not waiting for player input.
         /// Basically that they have "stood" or busted on a previous tick.
@@ -59,43 +63,77 @@ namespace brock.Blackjack
             switch (State)
             {
                 case GameState.Start:
-                    // Deal cards to player and dealer
                     PlayerHand.Add(Deck.Draw());
                     DealerHand.Add(Deck.Draw());
                     PlayerHand.Add(Deck.Draw());
                     DealerHand.Add(Deck.Draw());
 
-                    // if player has blackjack
-                    //      if dealer has blackjack, State=Push
-                    //      else State=PlayerWonNatural
-                    if (BestScore(PlayerHand) == 21) 
-                        State = BestScore(DealerHand) == 21 ? GameState.Push : GameState.PlayerWonNatural;
+                    if (BestScore(PlayerHand) == TargetScore) 
+                        State = (BestScore(DealerHand) == TargetScore ? GameState.Push : GameState.PlayerWonNatural);
                     else 
                         State = GameState.PlayerChoose;
 
                     break;
 
+
                 case GameState.PlayerChoose:
-                // if playerChocie == None, Error!!
-                // if playerChoice == Stand, State=DealerDraw, break
-                // if playerChoice == Hit draw for player
-                // calculate player score
-                // if playerScore<21, State=PlayerChoose, break
-                // if playerScore==21, State=DealerDraw, break
-                // if playerScore>21, State=PlayerBust, break
+                    if (playerChoice == PlayerChoice.None)
+                    {
+                        string noChoiceMsg = $"{LP} State is PlayerChoose but playerChoice is None.";
+                        Console.WriteLine(noChoiceMsg);
+                        throw new ArgumentException(noChoiceMsg);
+                    }
+
+                    if (playerChoice == PlayerChoice.Stand)
+                        State = GameState.DealerDraw;
+                    else if (playerChoice == PlayerChoice.Hit)
+                    {
+                        PlayerHand.Add(Deck.Draw());
+                        ushort playerScore = BestScore(PlayerHand);
+
+                        if (playerScore < TargetScore) State = GameState.PlayerChoose;
+                        if (playerScore == TargetScore) State = GameState.DealerDraw;
+                        if (playerScore > TargetScore) State = GameState.PlayerBust;
+                    }
+                    else
+                    {
+                        string unknownChoiceMsg = $"{LP} Unknown PlayerChoice: {playerChoice}";
+                        Console.WriteLine(unknownChoiceMsg);
+                        throw new ArgumentException(unknownChoiceMsg);
+                    }
+
+                    break;
+                
+
                 case GameState.DealerDraw:
-                // draw for dealer
-                // if dealerScore<17, State=DealerDraw, break
-                // if dealerScore>21, State=DealerBust, break
-                // if playerScore>dealerScore, State=PlayerWon
-                // elif dealerScore>playerScore, State=DealerWon
-                // else State=Push
+                    DealerHand.Add(Deck.Draw());
+                    ushort dealerScore = BestScore(DealerHand);
+
+                    if (dealerScore > TargetScore) 
+                        State = GameState.DealerBust;
+                    else if (dealerScore < DealerStandScore) 
+                        State = GameState.DealerDraw;
+                    else
+                    {
+                        ushort playerScore = BestScore(PlayerHand);
+
+                        if (playerScore > dealerScore)
+                            State = GameState.PlayerWon;
+                        else if (dealerScore > playerScore)
+                            State = GameState.DealerWon;
+                        else
+                            State = GameState.Push;
+                    }
+
+                    break;
+
+
                 default:
-                    // BAD GAME STATE MER
-                    Console.WriteLine($"[BLACKJACK - BlackjackGame] tick() called on invalid state: {State}. " +
+                    string badStateMsg = $"{LP} tick() called on invalid state: {State}. " +
                         $"tick() should only be called on states Start({GameState.Start}, " +
-                        $"PlayerChoose({GameState.PlayerChoose}), or DealerDraw({GameState.DealerDraw}.");
-                    throw new InvalidOperationException($"tick() called on invalid state: {State}");
+                        $"PlayerChoose({GameState.PlayerChoose}), or DealerDraw({GameState.DealerDraw}.";
+                    Console.WriteLine(badStateMsg);
+                    throw new InvalidOperationException(badStateMsg);
             }
         }
 
@@ -108,7 +146,7 @@ namespace brock.Blackjack
                 if (card.Value == Card.CardValue.ACE) aces++;
             }
 
-            while (score > 21 && aces > 0)
+            while (score > TargetScore && aces > 0)
             {
                 score -= 10;
                 aces--;
