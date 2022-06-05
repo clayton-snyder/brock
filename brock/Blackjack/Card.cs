@@ -16,21 +16,25 @@
             HEART
         }
 
-        public enum CardValue
+        /// <summary>
+        /// We give ACE=11 by default to allow greedy summation in the logic that calculates a 
+        /// hand's score. Such logic is responsible for considering the possibility of ACE=1.
+        /// </summary>
+        public enum CardValue : ushort
         {
-            ACE,
-            TWO,
-            THREE,
-            FOUR,
-            FIVE,
-            SIX,
-            SEVEN,
-            EIGHT,
-            NINE,
-            TEN,
-            JACK,
-            QUEEN,
-            KING
+            ACE = 11,
+            TWO = 2,
+            THREE = 3,
+            FOUR = 4,
+            FIVE = 5,
+            SIX = 6,
+            SEVEN = 7,
+            EIGHT = 8,
+            NINE = 9,
+            TEN = 10,
+            JACK = 10,
+            QUEEN = 10,
+            KING = 10
         }
 
         public CardSuit Suit;

@@ -14,11 +14,11 @@ namespace brock.Blackjack
 
         public Deck()
         {
-            shuffleNew();
+            ShuffleNew();
         }
 
 
-        public Card draw()
+        public Card Draw()
         {
             return cards.Dequeue();
         }
@@ -36,7 +36,7 @@ namespace brock.Blackjack
         /// Shuffles the remaining cards in the deck.
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        public void shuffleRemaining()
+        public void ShuffleRemaining()
         {
             throw new NotImplementedException();
         }
@@ -44,7 +44,7 @@ namespace brock.Blackjack
         /// <summary>
         /// Resets the deck with a new shuffled set of 52 cards.
         /// </summary>
-        public void shuffleNew()
+        public void ShuffleNew()
         {
             List<Card> orderedCards = new List<Card>();
             foreach (Card.CardSuit suit in Enum.GetValues(typeof(Card.CardSuit)))
