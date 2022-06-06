@@ -142,7 +142,7 @@ namespace brock.Blackjack
             ushort score = 0, aces = 0;
             foreach (Card card in hand)
             {
-                score += (ushort)card.Value;
+                score += card.Score();
                 if (card.Value == Card.CardValue.ACE) aces++;
             }
 

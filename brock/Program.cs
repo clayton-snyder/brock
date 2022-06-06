@@ -63,13 +63,23 @@ namespace brock
         {
             try
             {
-                foreach (SocketGuild guild in _client.Guilds)
-                {
-                    Console.Write($"**Registering commands for: {guild.Name} - {guild.Description} - {guild.Id}... ");
-                    IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(guild.Id);
-                    Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))}");
-                    Console.WriteLine($"From the command service: {String.Join(", ", _commands.SlashCommands.Select(cmd => cmd.Name))}");
-                }
+#if DEBUG
+                Console.WriteLine($"DEBUG - Registering to test guild {_config.Get<ulong>("TestGuildID")}");
+                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(_config.Get<ulong>("TestGuildID"));
+                Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} to TEST GUILD");
+#else
+                Console.WriteLine("Registering globally!");
+                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsGloballyAsync();
+                Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} globally.");
+#endif
+
+                //foreach (SocketGuild guild in _client.Guilds)
+                //{
+                //    Console.Write($"**Registering commands for: {guild.Name} - {guild.Description} - {guild.Id}... ");
+                //    IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(guild.Id);
+                //    Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))}");
+                //    Console.WriteLine($"From the command service: {String.Join(", ", _commands.SlashCommands.Select(cmd => cmd.Name))}");
+                //}
                 Console.WriteLine("**Finished registering commands.");
             }
             catch (Exception ex) { 

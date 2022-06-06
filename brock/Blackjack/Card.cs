@@ -1,7 +1,10 @@
-﻿namespace brock.Blackjack
+﻿using System;
+
+namespace brock.Blackjack
 {
     public class Card
     {
+        private const string LP = "[BLACKJACK - Card]";  // Log prefix
         public enum CardColor
         {
             BLACK,
@@ -16,25 +19,21 @@
             HEART
         }
 
-        /// <summary>
-        /// We give ACE=11 by default to allow greedy summation in the logic that calculates a 
-        /// hand's score. Such logic is responsible for considering the possibility of ACE=1.
-        /// </summary>
-        public enum CardValue : ushort
+        public enum CardValue
         {
-            ACE = 11,
-            TWO = 2,
-            THREE = 3,
-            FOUR = 4,
-            FIVE = 5,
-            SIX = 6,
-            SEVEN = 7,
-            EIGHT = 8,
-            NINE = 9,
-            TEN = 10,
-            JACK = 10,
-            QUEEN = 10,
-            KING = 10
+            ACE,
+            TWO,
+            THREE,
+            FOUR,
+            FIVE,
+            SIX,
+            SEVEN,
+            EIGHT,
+            NINE,
+            TEN,
+            JACK,
+            QUEEN,
+            KING
         }
 
         public CardSuit Suit;
@@ -50,6 +49,45 @@
         {
             if (Suit == CardSuit.SPADE || Suit == CardSuit.CLUB) return CardColor.BLACK;
             else return CardColor.RED;
+        }
+
+        /// <summary>
+        /// We give ACE=11 by default to allow greedy summation in the logic that calculates a 
+        /// hand's score. Such logic is responsible for considering the possibility of ACE=1.
+        /// </summary>
+        public ushort Score()
+        {
+            switch (Value)
+            {
+                case CardValue.ACE:
+                    return 11;
+                case CardValue.TWO:
+                    return 2;
+                case CardValue.THREE:
+                    return 3;
+                case CardValue.FOUR:
+                    return 4;
+                case CardValue.FIVE:
+                    return 5;
+                case CardValue.SIX:
+                    return 6;
+                case CardValue.SEVEN:
+                    return 7;
+                case CardValue.EIGHT:
+                    return 8;
+                case CardValue.NINE:
+                    return 9;
+                case CardValue.TEN:
+                    return 10;
+                case CardValue.JACK:
+                    return 10;
+                case CardValue.QUEEN:
+                    return 10;
+                case CardValue.KING:
+                    return 10;
+                default:
+                    throw new InvalidOperationException($"{LP} Unknown CardValue: {Value}");
+            }
         }
 
         public override string ToString()
