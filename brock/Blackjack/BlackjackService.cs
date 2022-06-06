@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord.WebSocket;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,13 @@ namespace brock.Blackjack
     public class BlackjackService
     {
         Dictionary<string, BlackjackGame> ActiveGames;
+
+        public BlackjackGame GetUserCurrentGame(SocketUser user)
+        {
+            BlackjackGame currentGame;
+            ActiveGames.TryGetValue(user.Username, out currentGame);
+            return currentGame;
+        }
 
         public async Task ProcessFinishedGame()
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace brock.Blackjack
 {
-    internal class Deck
+    public class Deck
     {
         // If this class is ever going to be used outside of blackjack, a Queue might not be good enough.
         // You probably would just need a list or custom Deque implementation.

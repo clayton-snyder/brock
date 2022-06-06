@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace brock.Blackjack
 {
-    internal class BlackjackGame
+    public class BlackjackGame
     {
         private const ushort TargetScore = 21;
         private const ushort DealerStandScore = 17;

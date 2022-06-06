@@ -92,7 +92,7 @@ namespace brock.Blackjack
 
         public override string ToString()
         {
-            string cardString = "";
+            string cardString;
             switch (Value)
             {
                 case CardValue.ACE:
@@ -142,16 +142,16 @@ namespace brock.Blackjack
             switch (Suit)
             {
                 case CardSuit.SPADE:
-                    cardString += "S";
+                    cardString += "s";
                     break;
                 case CardSuit.CLUB:
-                    cardString += "C";
+                    cardString += "c";
                     break;
                 case CardSuit.DIAMOND:
-                    cardString += "D";
+                    cardString += "d";
                     break;
                 case CardSuit.HEART:
-                    cardString += "H";
+                    cardString += "h";
                     break;
                 default:
                     cardString += "?";
@@ -159,6 +159,84 @@ namespace brock.Blackjack
             }
 
             return cardString;
+        }
+
+        /// <summary>
+        /// Converts to the string used to display the card in Discord chat (i.e., using emoji).
+        /// </summary>
+        /// <returns></returns>
+        public string ToChatString()
+        {
+
+            {
+                string cardString = "[";
+                switch (Value)
+                {
+                    case CardValue.ACE:
+                        cardString += "**A**";
+                        break;
+                    case CardValue.TWO:
+                        cardString += "**2**";
+                        break;
+                    case CardValue.THREE:
+                        cardString += "**3**";
+                        break;
+                    case CardValue.FOUR:
+                        cardString += "**4**";
+                        break;
+                    case CardValue.FIVE:
+                        cardString += "**5**";
+                        break;
+                    case CardValue.SIX:
+                        cardString += "**6**";
+                        break;
+                    case CardValue.SEVEN:
+                        cardString += "**7**";
+                        break;
+                    case CardValue.EIGHT:
+                        cardString += "**8**";
+                        break;
+                    case CardValue.NINE:
+                        cardString += "**9**";
+                        break;
+                    case CardValue.TEN:
+                        cardString += "**10**";
+                        break;
+                    case CardValue.JACK:
+                        cardString += "**J**";
+                        break;
+                    case CardValue.QUEEN:
+                        cardString += "**Q**";
+                        break;
+                    case CardValue.KING:
+                        cardString += "**K**";
+                        break;
+                    default:
+                        cardString += "**?**";
+                        break;
+                }
+
+                switch (Suit)
+                {
+                    case CardSuit.SPADE:
+                        cardString += "s";
+                        break;
+                    case CardSuit.CLUB:
+                        cardString += "c";
+                        break;
+                    case CardSuit.DIAMOND:
+                        cardString += "d";
+                        break;
+                    case CardSuit.HEART:
+                        cardString += "h";
+                        break;
+                    default:
+                        cardString += "?";
+                        break;
+                }
+
+                return cardString + "]";
+            }
         }
     }
 }
