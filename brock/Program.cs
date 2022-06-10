@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using brock.Blackjack;
 
 namespace brock
 {
@@ -98,6 +98,7 @@ namespace brock
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<SelectMenuHandlers>()
                 .AddSingleton<SpotifyService>()
+                .AddSingleton<BlackjackService>()
                 .BuildServiceProvider();
         }
     }

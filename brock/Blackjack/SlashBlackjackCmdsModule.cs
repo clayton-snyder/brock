@@ -34,7 +34,8 @@ namespace brock.Blackjack
             switch (currentGame.State)
             {
                 case GameState.PlayerChoose:
-                    await RespondAsync($"You drew {currentGame.PlayerHand.Last()}. Your hand: ");
+                    await RespondAsync($"You drew {currentGame.PlayerHand.Last().ToChatString()}.\n\n " +
+                        $"Your hand: {String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()))}");
                     break;
 
                     //TODO: rest of post-tick states (i think just bust?)
