@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static brock.Blackjack.BlackjackGame;
 
 namespace brock.Blackjack
 {
@@ -15,13 +16,14 @@ namespace brock.Blackjack
     public class BlackjackService
     {
         Dictionary<string, BlackjackGame> ActiveGames;
+        private const string LP = "[BLACKJACK - BlackjackService]";  // Log prefix
 
         public void Initialize()
         {
             this.ActiveGames = new Dictionary<string, BlackjackGame>();
         }
 
-        public bool StartGameForUser(SocketUser user, uint wager)
+        public bool StartGameForUser(SocketUser user, float wager)
         {
             Console.WriteLine($"Attempting to create new game for {user.Username} with wager {wager}.");
             if (ActiveGames.ContainsKey(user.Username))
@@ -41,12 +43,25 @@ namespace brock.Blackjack
             return currentGame;
         }
 
-        public async Task ProcessFinishedGame(BlackjackGame game)
+        public float ProcessFinishedGame(SocketUser user)
         {
             // Debit/credit winnings
             // Update player record
             // Clear game from dict
-            throw new NotImplementedException();
+            BlackjackGame game = this.ActiveGames[user.Username];
+            this.ActiveGames.Remove(user.Username);
+
+            if (game == null)
+            {
+                Console.WriteLine($"{LP} ProcessFinishedGame didn't find a game for {user.Username}.");
+                return 0.0f;
+            }
+
+            if (game.State == GameState.PlayerWon || game.State == GameState.DealerBust) return game.Wager;
+            if (game.State == GameState.DealerWon || game.State == GameState.PlayerBust) return -game.Wager;
+            if (game.State == GameState.PlayerWonNatural) return game.Wager * 1.5f;
+
+            return 0.0f;
         }
     }
 }

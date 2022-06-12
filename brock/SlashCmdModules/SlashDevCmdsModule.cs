@@ -42,5 +42,11 @@ namespace brock.Services
         {
             await RespondAsync($"Msg author: {msg.Author}");
         }
+
+        [SlashCommand("sstand", "Keep your current hand.")]
+        public async Task Stand()
+        {
+            await RespondAsync("STAND");
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace brock.Blackjack
 
         // TODO: Need big refactors here
         [SlashCommand("bet", "Start a new game with the chosen wager.")]
-        public async Task bet([MinValue(1)] uint wager)
+        public async Task Bet([MinValue(1)] uint wager)
         {
             BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
             if (currentGame != null)
@@ -26,9 +26,8 @@ namespace brock.Blackjack
 
             //TODO: Check if user has sufficient funds for the wager. Or do that in service?
 
-            bool created = BlackjackService.StartGameForUser(Context.User, wager);
             
-            if (!created)
+            if (!BlackjackService.StartGameForUser(Context.User, wager))
             {
                 await RespondAsync($"Could not create game for unknown reason.");
                 return;
@@ -41,13 +40,27 @@ namespace brock.Blackjack
                 await RespondAsync($"Supposedly the game was created but getting it returned null. Not great.");
             }
 
-            // Game should be in Start state here
             currentGame.Tick();
-            throw new NotImplementedException();
+
+            string response = $"Your hand: {String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()))}\n";
+            if (currentGame.State == GameState.PlayerWonNatural)
+            {
+                response += "You cheated and got a blackjack.\n";
+                float credits = BlackjackService.ProcessFinishedGame(Context.User);
+                response += $"Won {credits} credits.";
+            } 
+            else if (currentGame.State == GameState.Push)
+            {
+                response += $"Dealer hand: {currentGame.DealerHand.Select(c => c.ToChatString())}\n";
+                response += $"It's a push. Your wager of {currentGame.Wager} is returned.";
+                BlackjackService.ProcessFinishedGame(Context.User);
+            }
+
+            await RespondAsync(response);
         }
 
         [SlashCommand("hit", "Take another card.")]
-        public async Task hit()
+        public async Task Hit()
         {
             BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
             if (currentGame == null)
@@ -55,8 +68,18 @@ namespace brock.Blackjack
                 await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
                 return;
             }
-            
-            currentGame.Tick(PlayerChoice.Hit);
+
+            try
+            {
+                currentGame.Tick(PlayerChoice.Hit);
+            }
+            catch (Exception e)
+            {
+                await RespondAsync(e.Message);
+                return;
+            }
+
+
             string playerHandString = String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()));
             ushort playerScore = currentGame.BestScore(currentGame.PlayerHand);
             
@@ -67,7 +90,7 @@ namespace brock.Blackjack
                         $"Your hand: {playerHandString}");
                     break;
                 case GameState.PlayerBust:
-                    await BlackjackService.ProcessFinishedGame(currentGame);
+                    BlackjackService.ProcessFinishedGame(Context.User);
                     await RespondAsync($"You drew {currentGame.PlayerHand.Last().ToChatString()}\n\n" +
                         $"Busted with a score of {playerScore}. Final hand: {playerHandString}.\n" +
                         $"Lost {currentGame.Wager} credits. Thank you so much for a-playing my game!");
@@ -102,7 +125,7 @@ namespace brock.Blackjack
                         case GameState.Push:
                             response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
                                 $"It's a push.\n" +
-                                $"Your bet of {currentGame.Wager} credits is returned.";
+                                $"Your wager of {currentGame.Wager} credits is returned.";
                             break;
                         default:
                             response += $"BIG error. Not looking great. Unexpected GameState ({currentGame.State}) after " +
@@ -111,7 +134,7 @@ namespace brock.Blackjack
                             break;
                     }
 
-                    await BlackjackService.ProcessFinishedGame(currentGame);
+                    BlackjackService.ProcessFinishedGame(Context.User);
                     await RespondAsync(response);
                     break;
                     //TODO: rest of post-tick states (i think just bust?)
@@ -119,13 +142,13 @@ namespace brock.Blackjack
         }
 
         [SlashCommand("stand", "Keep your current hand.")]
-        public async Task stand()
+        public async Task Stand()
         {
-            throw new NotImplementedException();
+            await RespondAsync("STAND");
         }
 
         [SlashCommand("show", "Show your current game.")]
-        public async Task show()
+        public async Task Show()
         {
             throw new NotImplementedException();
         }

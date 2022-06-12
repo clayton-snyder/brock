@@ -45,13 +45,15 @@ namespace brock.Blackjack
         public Deck Deck;
         public List<Card> PlayerHand;
         public List<Card> DealerHand;
-        public uint Wager;
+        public float Wager;
         public GameState State;
 
-        public BlackjackGame(uint Wager)
+        public BlackjackGame(float Wager)
         {
             this.Wager = Wager;
             this.Deck = new Deck(); // Default Deck constructor shuffles itself
+            this.PlayerHand = new List<Card>();
+            this.DealerHand = new List<Card>();
             this.State = GameState.Start; // Necessary?
         }
 
@@ -131,8 +133,8 @@ namespace brock.Blackjack
 
                 default:
                     string badStateMsg = $"{LP} tick() called on invalid state: {State}. " +
-                        $"tick() should only be called on states Start({GameState.Start}, " +
-                        $"PlayerChoose({GameState.PlayerChoose}), or DealerDraw({GameState.DealerDraw}.";
+                        $"Tick() should only be called on states {GameState.Start}, " +
+                        $"{GameState.PlayerChoose}, or {GameState.DealerDraw}.";
                     Console.WriteLine(badStateMsg);
                     throw new InvalidOperationException(badStateMsg);
             }
