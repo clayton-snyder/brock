@@ -49,6 +49,7 @@ namespace brock
                 services.GetRequiredService<SelectMenuHandlers>().Initialize();
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 await _spotify.InitializeAsync();
+                services.GetRequiredService<BlackjackService>().Initialize();
 
                 _client.Ready += ReadyAsync;
                 await _client.LoginAsync(TokenType.Bot, discordToken);

@@ -16,6 +16,24 @@ namespace brock.Blackjack
     {
         Dictionary<string, BlackjackGame> ActiveGames;
 
+        public void Initialize()
+        {
+            this.ActiveGames = new Dictionary<string, BlackjackGame>();
+        }
+
+        public bool StartGameForUser(SocketUser user, uint wager)
+        {
+            Console.WriteLine($"Attempting to create new game for {user.Username} with wager {wager}.");
+            if (ActiveGames.ContainsKey(user.Username))
+            {
+                Console.WriteLine($"Failed to start game for {user.Username} as a game already exists.");
+                return false;
+            }
+            ActiveGames[user.Username] = new BlackjackGame(wager);
+            Console.WriteLine($"New game successfully created for {user.Username} with wager {wager}.");
+            return true;
+        }
+
         public BlackjackGame GetUserCurrentGame(SocketUser user)
         {
             BlackjackGame currentGame;
@@ -23,7 +41,7 @@ namespace brock.Blackjack
             return currentGame;
         }
 
-        public async Task ProcessFinishedGame()
+        public async Task ProcessFinishedGame(BlackjackGame game)
         {
             // Debit/credit winnings
             // Update player record

@@ -52,6 +52,7 @@ namespace brock.Blackjack
         {
             this.Wager = Wager;
             this.Deck = new Deck(); // Default Deck constructor shuffles itself
+            this.State = GameState.Start; // Necessary?
         }
 
         /// <summary>
