@@ -66,11 +66,11 @@ namespace brock
             {
 #if DEBUG
                 Console.WriteLine($"DEBUG - Registering to test guild {_config.Get<ulong>("TestGuildID")}");
-                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(_config.Get<ulong>("TestGuildID"));
-                Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} to TEST GUILD");
+                //IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(_config.Get<ulong>("TestGuildID"));
+                //Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} to TEST GUILD");
 #else
                 Console.WriteLine("Registering globally!");
-                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsGloballyAsync();
+                IReadOnlyCollection<Discord.Rest.RestGlobalCommand> cmds = await _commands.RegisterCommandsGloballyAsync();
                 Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} globally.");
 #endif
 

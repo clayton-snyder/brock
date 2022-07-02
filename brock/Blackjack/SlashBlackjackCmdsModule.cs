@@ -11,6 +11,8 @@ namespace brock.Blackjack
     [Group("blackjack", "We all love a game of BLACKJACK. Enjoy a game of Blackjack.")]
     public class SlashBlackjackCmdsModule : InteractionModuleBase<SocketInteractionContext>
     {
+        private const string LP = "[BLACKJACK - SlashBlackjackCmdsModule]";
+
         public BlackjackService BlackjackService { get; set; }
 
         // TODO: Need big refactors here
@@ -40,7 +42,9 @@ namespace brock.Blackjack
                 await RespondAsync($"Supposedly the game was created but getting it returned null. Not great.");
             }
 
+            Console.WriteLine($"{LP} Fetched created game, now calling first 'Tick()'.");
             currentGame.Tick();
+            Console.WriteLine($"{LP} Finished the tick.");
 
             string response = $"Your hand: {String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()))}\n";
             if (currentGame.State == GameState.PlayerWonNatural)
@@ -56,6 +60,7 @@ namespace brock.Blackjack
                 BlackjackService.ProcessFinishedGame(Context.User);
             }
 
+            Console.WriteLine($"{LP} Now responding with: \"{response}\"");
             await RespondAsync(response);
         }
 
@@ -93,7 +98,7 @@ namespace brock.Blackjack
                     BlackjackService.ProcessFinishedGame(Context.User);
                     await RespondAsync($"You drew {currentGame.PlayerHand.Last().ToChatString()}\n\n" +
                         $"Busted with a score of {playerScore}. Final hand: {playerHandString}.\n" +
-                        $"Lost {currentGame.Wager} credits. Thank you so much for a-playing my game!");
+                        $"Lost {currentGame.Wager} credits.");
                     break;
                 case GameState.DealerDraw:
                     string response = $"You drew {currentGame.PlayerHand.Last().ToChatString()}.\n\n" +
@@ -120,7 +125,7 @@ namespace brock.Blackjack
                         case GameState.DealerWon:
                             response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
                                 $"You lost with a score of {playerScore}.\n" +
-                                $"Lost {currentGame.Wager} credits. Thank you so much for a-playing my game!";
+                                $"Lost {currentGame.Wager} credits.";
                             break;
                         case GameState.Push:
                             response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
@@ -144,15 +149,42 @@ namespace brock.Blackjack
         [SlashCommand("stand", "Keep your current hand.")]
         public async Task Stand()
         {
-            await RespondAsync("STAND");
+            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            if (currentGame == null)
+            {
+                await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
+                return;
+            }
+
+            try
+            {
+                currentGame.Tick(PlayerChoice.Stand);
+            }
+            catch (Exception e)
+            {
+                await RespondAsync(e.Message);
+                return;
+            }
+
+            if (currentGame.State != GameState.DealerDraw)
+            {
+                Console.WriteLine($"{LP} Invalid game state after Tick on PlayerChoice.Stand: {currentGame.State}");
+                await RespondAsync("There was a problem. Game aborted.");
+                BlackjackService.ClearUserGame();
+            }
         }
 
         [SlashCommand("show", "Show your current game.")]
         public async Task Show()
         {
+            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            if (currentGame == null)
+            {
+                await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
+                return;
+            }
+
             throw new NotImplementedException();
         }
-        
-        
     }
 }

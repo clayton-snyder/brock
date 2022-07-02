@@ -147,12 +147,18 @@ namespace brock.Blackjack
             {
                 score += card.Score();
                 if (card.Value == Card.CardValue.ACE) aces++;
+                Console.WriteLine($"card.Value={card.Value}, " +
+                    $"card.ToChatString={card.ToChatString()}, " +
+                    $"card.ToString()= {card.ToString()}, " +
+                    $"card.Score()={card.Score()}, " +
+                    $"score is now {score }.");
             }
 
             while (score > TargetScore && aces > 0)
             {
                 score -= 10;
                 aces--;
+                Console.WriteLine($"Minus ace, score is now {score}");
             }
 
             return score;

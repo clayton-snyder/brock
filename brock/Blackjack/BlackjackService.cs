@@ -25,14 +25,14 @@ namespace brock.Blackjack
 
         public bool StartGameForUser(SocketUser user, float wager)
         {
-            Console.WriteLine($"Attempting to create new game for {user.Username} with wager {wager}.");
+            Console.WriteLine($"{LP} Attempting to create new game for {user.Username} with wager {wager}.");
             if (ActiveGames.ContainsKey(user.Username))
             {
-                Console.WriteLine($"Failed to start game for {user.Username} as a game already exists.");
+                Console.WriteLine($"{LP} Failed to start game for {user.Username} as a game already exists.");
                 return false;
             }
             ActiveGames[user.Username] = new BlackjackGame(wager);
-            Console.WriteLine($"New game successfully created for {user.Username} with wager {wager}.");
+            Console.WriteLine($"{LP} New game successfully created for {user.Username} with wager {wager}.");
             return true;
         }
 
@@ -62,6 +62,12 @@ namespace brock.Blackjack
             if (game.State == GameState.PlayerWonNatural) return game.Wager * 1.5f;
 
             return 0.0f;
+        }
+
+        public bool ClearUserGame(SocketUser user)
+        {
+            Console.WriteLine($"{LP} Clearing game for {user.Username}.");
+            return ActiveGames.Remove(user.Username);
         }
     }
 }

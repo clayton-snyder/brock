@@ -31,6 +31,14 @@ namespace brock.Services
             //return Task.CompletedTask;
         }
 
+        [SlashCommand("grengis", "Perform a grengis.")]
+        public async Task Grengis(string input)
+        {
+            Console.WriteLine("In SlashCommands.Grengis, now trying to respond...");
+            await RespondAsync($"Krahn {input}");
+            //return Task.CompletedTask;
+        }
+
         [UserCommand("testUserContextCommand")]
         public async Task TestUserCtx(IUser user)
         {
