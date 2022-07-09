@@ -170,8 +170,23 @@ namespace brock.Blackjack
             {
                 Console.WriteLine($"{LP} Invalid game state after Tick on PlayerChoice.Stand: {currentGame.State}");
                 await RespondAsync("There was a problem. Game aborted.");
-                BlackjackService.ClearUserGame();
+                BlackjackService.ClearUserGame(Context.User);
             }
+
+            while (currentGame.State == GameState.DealerDraw)
+            {
+                try
+                {
+                    currentGame.Tick();
+                }
+                catch (Exception e)
+                {
+                    await RespondAsync(e.Message);
+                    return;
+                }
+            }
+
+            //TODO: Respond with result of game.
         }
 
         [SlashCommand("show", "Show your current game.")]
