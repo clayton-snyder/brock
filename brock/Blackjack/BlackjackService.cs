@@ -21,6 +21,7 @@ namespace brock.Blackjack
         public void Initialize()
         {
             this.ActiveGames = new Dictionary<string, BlackjackGame>();
+            Console.WriteLine($"{LP} BlackjackService initialized.");
         }
 
         public bool StartGameForUser(SocketUser user, float wager)

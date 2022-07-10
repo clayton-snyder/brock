@@ -200,7 +200,7 @@ namespace brock.Blackjack
                 return;
             }
 
-            throw new NotImplementedException();
+            await RespondAsync(currentGame.ToChatString());
         }
 
         [SlashCommand("cleargame", "(admin) Clear game for specified user.")]

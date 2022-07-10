@@ -29,6 +29,8 @@ namespace brock
         public async Task MainAsync(string[] args)
         {
             Console.WriteLine($"In the beginning, God created the heavens and the earth.\n");
+            const string LP = "[MainAsync]";
+
             using (var services = ConfigureServices())
             {
                 // Have to load ConfigService first since we get Discord token from it
@@ -37,7 +39,7 @@ namespace brock
                 string discordToken = _config.Get<string>("DiscordToken");
                 string spotifyClientID = _config.Get<string>("SpotifyClientID");
                 string spotifyClientSecret = _config.Get<string>("SpotifyClientSecret");
-                Console.WriteLine($"**Loaded from config:\n" +
+                Console.WriteLine($"{LP} Loaded from config:\n" +
                     $"\tDiscordToken:{discordToken}, " +
                     $"\n\tSpotifyClientID:{spotifyClientID}, " +
                     $"\n\tSpotifyClientSecret:{spotifyClientSecret}");
@@ -52,10 +54,13 @@ namespace brock
                 services.GetRequiredService<BlackjackService>().Initialize();
 
                 _client.Ready += ReadyAsync;
+                Console.WriteLine($"{LP} Attemtping LoginAsync().");
                 await _client.LoginAsync(TokenType.Bot, discordToken);
+                Console.WriteLine($"{LP} Attempting StartAsync().");
                 await _client.StartAsync();
 
                 // Block task until program is closed
+                Console.WriteLine($"{LP} Init steps finished, now blocking.");
                 await Task.Delay(-1);
             }
         }
@@ -66,8 +71,8 @@ namespace brock
             {
 #if DEBUG
                 Console.WriteLine($"DEBUG - Registering to test guild {_config.Get<ulong>("TestGuildID")}");
-                //IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(_config.Get<ulong>("TestGuildID"));
-                //Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} to TEST GUILD");
+                IReadOnlyCollection<Discord.Rest.RestGuildCommand> cmds = await _commands.RegisterCommandsToGuildAsync(_config.Get<ulong>("TestGuildID"));
+                Console.WriteLine($"Registered: {String.Join(", ", cmds.Select(cmd => cmd.Name))} to TEST GUILD");
 #else
                 Console.WriteLine("Registering globally!");
                 IReadOnlyCollection<Discord.Rest.RestGlobalCommand> cmds = await _commands.RegisterCommandsGloballyAsync();
