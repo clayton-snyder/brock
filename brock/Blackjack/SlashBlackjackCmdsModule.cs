@@ -19,7 +19,7 @@ namespace brock.Blackjack
         [SlashCommand("bet", "Start a new game with the chosen wager.")]
         public async Task Bet([MinValue(1)] uint wager)
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
             if (currentGame != null)
             {
                 await RespondAsync("Finish your current game first.");
@@ -35,7 +35,7 @@ namespace brock.Blackjack
                 return;
             }
 
-            currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
 
             if (currentGame == null)
             {
@@ -46,7 +46,8 @@ namespace brock.Blackjack
             currentGame.Tick();
             Console.WriteLine($"{LP} Finished the tick.");
 
-            string response = $"Your hand: {String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()))}\n";
+            //string response = $"Your hand: {String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()))}\n";
+            string response = currentGame.ToChatString();
             if (currentGame.State == GameState.PlayerWonNatural)
             {
                 response += "You cheated and got a blackjack.\n";
@@ -55,7 +56,7 @@ namespace brock.Blackjack
             } 
             else if (currentGame.State == GameState.Push)
             {
-                response += $"Dealer hand: {currentGame.DealerHand.Select(c => c.ToChatString())}\n";
+                //response += $"Dealer hand: {currentGame.DealerHand.Select(c => c.ToChatString())}\n";
                 response += $"It's a push. Your wager of {currentGame.Wager} is returned.";
                 BlackjackService.ProcessFinishedGame(Context.User);
             }
@@ -67,7 +68,7 @@ namespace brock.Blackjack
         [SlashCommand("hit", "Take another card.")]
         public async Task Hit()
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
             if (currentGame == null)
             {
                 await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
@@ -149,7 +150,7 @@ namespace brock.Blackjack
         [SlashCommand("stand", "Keep your current hand.")]
         public async Task Stand()
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
             if (currentGame == null)
             {
                 await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
@@ -170,7 +171,7 @@ namespace brock.Blackjack
             {
                 Console.WriteLine($"{LP} Invalid game state after Tick on PlayerChoice.Stand: {currentGame.State}");
                 await RespondAsync("There was a problem. Game aborted.");
-                BlackjackService.ClearUserGame(Context.User);
+                BlackjackService.ClearUserGame(Context.User.Username);
             }
 
             while (currentGame.State == GameState.DealerDraw)
@@ -192,7 +193,7 @@ namespace brock.Blackjack
         [SlashCommand("show", "Show your current game.")]
         public async Task Show()
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User);
+            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
             if (currentGame == null)
             {
                 await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
@@ -200,6 +201,31 @@ namespace brock.Blackjack
             }
 
             throw new NotImplementedException();
+        }
+
+        [SlashCommand("cleargame", "(admin) Clear game for specified user.")]
+        public async Task ClearGame(String username)
+        {
+            if (!Context.User.Username.ToLower().Equals("clant"))
+            {
+                await RespondAsync($"User {Context.User.Username} is not allowed to do this.");
+                return;
+            }
+
+            if (BlackjackService.GetUserCurrentGame(username) == null)
+            {
+                await RespondAsync($"Didn't find a game for '{username}'.");
+                return;
+            }
+
+            if (BlackjackService.ClearUserGame(username))
+            {
+                await RespondAsync($"Cleared {username}'s game.");
+            }
+            else
+            {
+                await RespondAsync($"ClearUserGame() returned false despite GetUserCurrentGame not returning null?");
+            }
         }
     }
 }

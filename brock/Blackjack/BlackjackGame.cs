@@ -163,5 +163,29 @@ namespace brock.Blackjack
 
             return score;
         }
+
+        public override string ToString()
+        {
+            string gameString = "PLAYER: " + String.Join(", ", PlayerHand) + $" (score: {BestScore(PlayerHand)})\n";
+            gameString += "DEALER: " + String.Join(", ", DealerHand) + $" (score: {BestScore(DealerHand)})";
+            return gameString;
+        }
+
+        public string ToChatString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Your hand: {String.Join(", ", PlayerHand.Select(a => a.ToChatString()))}");
+            if (State == GameState.PlayerChoose)
+            {
+                sb.AppendLine($"Dealer hand: [**?**], {DealerHand.Last().ToChatString()}");
+                sb.AppendLine($"Hit or stand?");
+            }
+            else
+            {
+                sb.AppendLine($"Dealer hand: {String.Join(", ", DealerHand.Select(a => a.ToChatString()))}");
+            }
+
+            return sb.ToString();
+        }
     }
 }

@@ -36,10 +36,10 @@ namespace brock.Blackjack
             return true;
         }
 
-        public BlackjackGame GetUserCurrentGame(SocketUser user)
+        public BlackjackGame GetUserCurrentGame(string username)
         {
             BlackjackGame currentGame;
-            ActiveGames.TryGetValue(user.Username, out currentGame);
+            ActiveGames.TryGetValue(username, out currentGame);
             return currentGame;
         }
 
@@ -64,10 +64,10 @@ namespace brock.Blackjack
             return 0.0f;
         }
 
-        public bool ClearUserGame(SocketUser user)
+        public bool ClearUserGame(string username)
         {
-            Console.WriteLine($"{LP} Clearing game for {user.Username}.");
-            return ActiveGames.Remove(user.Username);
+            Console.WriteLine($"{LP} Clearing game for {username}.");
+            return ActiveGames.Remove(username);
         }
     }
 }
