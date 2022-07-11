@@ -44,17 +44,17 @@ namespace brock.Blackjack
             return currentGame;
         }
 
-        public float ProcessFinishedGame(SocketUser user)
+        public float ProcessFinishedGame(string username)
         {
             // Debit/credit winnings
             // Update player record
             // Clear game from dict
-            BlackjackGame game = this.ActiveGames[user.Username];
-            this.ActiveGames.Remove(user.Username);
+            BlackjackGame game = this.ActiveGames[username];
+            this.ActiveGames.Remove(username);
 
             if (game == null)
             {
-                Console.WriteLine($"{LP} ProcessFinishedGame didn't find a game for {user.Username}.");
+                Console.WriteLine($"{LP} ProcessFinishedGame didn't find a game for {username}.");
                 return 0.0f;
             }
 
