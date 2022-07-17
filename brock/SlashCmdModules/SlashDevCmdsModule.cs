@@ -10,6 +10,7 @@ namespace brock.Services
         // NOTE: Two ways of dependency injection below. Either give the dependency reference a public
         // getter/setter or inject it in the constructor. (Different naming convention due to priv var?)
         public InteractionService Commands { get; set; }
+        public ScienceService ScienceService { get; set; }
         private readonly InteractionHandler _handler;
 
         public SlashDevCmdsModule(InteractionHandler handler)
@@ -55,6 +56,12 @@ namespace brock.Services
         public async Task Stand()
         {
             await RespondAsync("STAND");
+        }
+
+        [SlashCommand("science-event", "Get today's daily science event.")]
+        public async Task ScienceEvent()
+        {
+            await RespondAsync(await ScienceService.GetScienceFactForDay(7, 15));
         }
     }
 }

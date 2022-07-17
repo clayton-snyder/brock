@@ -52,6 +52,7 @@ namespace brock
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 await _spotify.InitializeAsync();
                 services.GetRequiredService<BlackjackService>().Initialize();
+                services.GetRequiredService<ScienceService>().Initialize();
 
                 _client.Ready += ReadyAsync;
                 Console.WriteLine($"{LP} Attemtping LoginAsync().");
@@ -105,6 +106,7 @@ namespace brock
                 .AddSingleton<SelectMenuHandlers>()
                 .AddSingleton<SpotifyService>()
                 .AddSingleton<BlackjackService>()
+                .AddSingleton<ScienceService>()
                 .BuildServiceProvider();
         }
     }
