@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Web;
 
 namespace brock.Services
@@ -13,6 +14,7 @@ namespace brock.Services
     public class ScienceService
     {
         private HttpClient Client;
+        private Timer _timer;
         private readonly string baseUrl = "https://todayinsci.com";
         private const string LP = "[ScienceService]";  // Log prefix
 
@@ -20,9 +22,18 @@ namespace brock.Services
         {
             Client = new HttpClient();
             // TODO: Create the scheduler
+            //https://stackoverflow.com/questions/19291816/executing-method-every-hour-on-the-hour
+            // Check every 15 minutes if it's time for the daily fact yet
+            _timer = new Timer(15 * 60 * 1000); // 
+            //timer.Elapsed += do thing
         }
 
-        public async Task<string> GetScienceFactForDay(ushort month, ushort day)
+        //public bool IsDailyEventTime()
+        //{
+
+        //}
+
+        public async Task<string> GetScienceEventForDay(int month, int day)
         {
             if (month < 1 || month > 12) return $"Invalid month value: {month}";
             if (Array.Exists(new ushort[] { 1, 3, 5, 7, 8, 10, 12 }, e => e == month) && day > 31)
@@ -89,6 +100,7 @@ namespace brock.Services
                 string description = (HttpUtility.HtmlDecode(sib.InnerText)).Trim();
                 sib = sib.NextSibling;
 
+                // Dodges the empty nodes
                 if (!(string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description)))
                 {
                     options.Add(title, description);

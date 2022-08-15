@@ -88,7 +88,23 @@ namespace brock.Blackjack
                     }
 
                     if (playerChoice == PlayerChoice.Stand)
+                    {
+                        ushort preDealerScore = BestScore(DealerHand);
                         State = GameState.DealerDraw;
+
+                        // Check if Dealer's opening hand was >17, and decide the game if so.
+                        if (preDealerScore >= DealerStandScore)
+                        {
+                            ushort playerScore = BestScore(PlayerHand);
+
+                            if (playerScore > preDealerScore)
+                                State = GameState.PlayerWon;
+                            else if (preDealerScore > playerScore)
+                                State = GameState.DealerWon;
+                            else
+                                State = GameState.Push;
+                        }
+                    }
                     else if (playerChoice == PlayerChoice.Hit)
                     {
                         PlayerHand.Add(Deck.Draw());
@@ -147,20 +163,21 @@ namespace brock.Blackjack
             {
                 score += card.Score();
                 if (card.Value == Card.CardValue.ACE) aces++;
-                Console.WriteLine($"card.Value={card.Value}, " +
-                    $"card.ToChatString={card.ToChatString()}, " +
-                    $"card.ToString()= {card.ToString()}, " +
-                    $"card.Score()={card.Score()}, " +
-                    $"score is now {score }.");
+                //Console.WriteLine($"card.Value={card.Value}, " +
+                //    $"card.ToChatString={card.ToChatString()}, " +
+                //    $"card.ToString()= {card.ToString()}, " +
+                //    $"card.Score()={card.Score()}, " +
+                //    $"score is now {score }.");
             }
 
             while (score > TargetScore && aces > 0)
             {
                 score -= 10;
                 aces--;
-                Console.WriteLine($"Minus ace, score is now {score}");
+                //Console.WriteLine($"Minus ace, score is now {score}");
             }
 
+            Console.WriteLine($"{LP} Score={score} from hand: {String.Join(", ", hand)}");
             return score;
         }
 

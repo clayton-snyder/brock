@@ -23,11 +23,14 @@ namespace brock.Services
         private string _clientSecret;
         private string _redirectUri;
 
+        private const string LP = "[BLACKJACK - BlackjackService]";  // Log prefix
+
+
         public SpotifyService(ConfigService config = null)
         {
             if (config == null)
             {
-                throw new ArgumentNullException("config");
+                throw new ArgumentNullException($"{LP} Constructor - config arg is null?");
             }
             _config = config;
         }

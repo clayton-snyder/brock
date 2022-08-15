@@ -11,15 +11,21 @@ namespace brock.Blackjack
         // If this class is ever going to be used outside of blackjack, a Queue might not be good enough.
         // You probably would just need a list or custom Deque implementation.
         Queue<Card> cards;
+        //int counter;
 
         public Deck()
         {
             ShuffleNew();
+            //counter = 0;
         }
 
 
         public Card Draw()
         {
+            //return new Card(Card.CardSuit.DIAMOND, Card.CardValue.NINE);
+            //if (counter > 3) counter = 0;
+            //List<Card.CardValue> l = new List<Card.CardValue>() { Card.CardValue.THREE, Card.CardValue.ACE, Card.CardValue.TWO, Card.CardValue.ACE };
+            //return new Card(Card.CardSuit.DIAMOND, l[counter++]);
             return cards.Dequeue();
         }
 

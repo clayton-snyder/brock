@@ -31,6 +31,8 @@ namespace brock
             Console.WriteLine($"In the beginning, God created the heavens and the earth.\n");
             const string LP = "[MainAsync]";
 
+
+
             using (var services = ConfigureServices())
             {
                 // Have to load ConfigService first since we get Discord token from it
@@ -48,11 +50,12 @@ namespace brock
                 _commands = services.GetRequiredService<InteractionService>();
                 _spotify = services.GetRequiredService<SpotifyService>();
 
-                services.GetRequiredService<SelectMenuHandlers>().Initialize();
+                services.GetRequiredService<ComponentHandlers>().Initialize();
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 await _spotify.InitializeAsync();
                 services.GetRequiredService<BlackjackService>().Initialize();
                 services.GetRequiredService<ScienceService>().Initialize();
+                services.GetRequiredService<DatabaseService>().Initialize();
 
                 _client.Ready += ReadyAsync;
                 Console.WriteLine($"{LP} Attemtping LoginAsync().");
@@ -103,10 +106,11 @@ namespace brock
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<InteractionHandler>()
-                .AddSingleton<SelectMenuHandlers>()
+                .AddSingleton<ComponentHandlers>()
                 .AddSingleton<SpotifyService>()
                 .AddSingleton<BlackjackService>()
                 .AddSingleton<ScienceService>()
+                .AddSingleton<DatabaseService>()
                 .BuildServiceProvider();
         }
     }

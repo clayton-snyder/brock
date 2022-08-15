@@ -1,234 +1,111 @@
-﻿using Discord.Interactions;
+﻿using brock.Services;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static brock.Blackjack.BlackjackGame;
+using static brock.Blackjack.BlackjackService;
 
 namespace brock.Blackjack
 {
+
     [Group("blackjack", "We all love a game of BLACKJACK. Enjoy a game of Blackjack.")]
     public class SlashBlackjackCmdsModule : InteractionModuleBase<SocketInteractionContext>
     {
         private const string LP = "[BLACKJACK - SlashBlackjackCmdsModule]";
-
+        private readonly DiscordSocketClient _client;
+        private readonly ConfigService _config;
+        public SlashBlackjackCmdsModule(DiscordSocketClient socketClient, ConfigService config)
+        {
+            _client = socketClient;
+            _config = config;
+            _client.ButtonExecuted += ButtonExecuted;
+            _client.ModalSubmitted += ModalSubmitted;
+        }
         public BlackjackService BlackjackService { get; set; }
 
-        // TODO: Need big refactors here
+        private async Task ButtonExecuted(SocketMessageComponent arg)
+        {
+            Console.WriteLine($"{LP} ButtonExecuted - {arg.Type} - {arg.Data.Type} - {arg.CreatedAt} - RESPONDED?{arg.HasResponded}");
+            if (arg.HasResponded)
+            {
+                Console.WriteLine($"{LP} Ignoring ButtonExecuted event due to already responded.");
+                return;
+            }
+
+            (string Response, ButtonGroup IncludedButtons) result;
+            switch (arg.Data.CustomId)
+            {
+                case "blackjack-hit":
+                    result = BlackjackService.Hit(arg.User.Username);
+                    await arg.RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+                    break;
+                case "blackjack-stand":
+                    result = BlackjackService.Stand(arg.User.Username);
+                    await arg.RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+                    break;
+                case "blackjack-play-again":
+                    await arg.RespondWithModalAsync(NewBetModal());
+                    break;
+            }
+        }
+
+        private async Task ModalSubmitted(SocketModal arg)
+        {
+            switch (arg.Data.CustomId)
+            {
+                case "blackjack-new-bet":
+                    uint wager;
+                    try
+                    {
+                        wager = UInt32.Parse(arg.Data.Components.ToList().First(x => x.CustomId == "wager").Value);
+                        if (wager > _config.Get<uint>("BlackjackMaxWager"))
+                        {
+                            throw new ArgumentOutOfRangeException($"Wager must be positive and under {_config.Get<uint>("BlackjackMaxWager")}");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"{LP} Invalid new wager from modal: {e.Message}");
+                        await arg.RespondAsync(
+                            $"Idiot, enter a positive integer under {_config.Get<uint>("BlackjackMaxWager")}.",
+                            components: GetButtonComponent(ButtonGroup.PlayAgain)
+                        );
+                        return;
+                    }
+                    (string Response, ButtonGroup IncludedButtons) result = BlackjackService.Bet(arg.User.Username, wager);
+                    await arg.RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+                    return;                    
+            }
+        }
+
         [SlashCommand("bet", "Start a new game with the chosen wager.")]
         public async Task Bet([MinValue(1)] uint wager)
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
-            if (currentGame != null)
-            {
-                await RespondAsync("Finish your current game first.");
-                return;
-            }
-
-            //TODO: Check if user has sufficient funds for the wager. Or do that in service?
-
-            
-            if (!BlackjackService.StartGameForUser(Context.User, wager))
-            {
-                await RespondAsync($"Could not create game for unknown reason.");
-                return;
-            }
-
-            currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
-
-            if (currentGame == null)
-            {
-                await RespondAsync($"Supposedly the game was created but getting it returned null. Not great.");
-            }
-
-            Console.WriteLine($"{LP} Fetched created game, now calling first 'Tick()'.");
-            currentGame.Tick();
-            Console.WriteLine($"{LP} Finished the tick.");
-
-            //string response = $"Your hand: {String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()))}\n";
-            string response = currentGame.ToChatString();
-            if (currentGame.State == GameState.PlayerWonNatural)
-            {
-                response += "You cheated and got a blackjack.\n";
-                float credits = BlackjackService.ProcessFinishedGame(Context.User.Username);
-                response += $"Won {credits} credits.";
-            } 
-            else if (currentGame.State == GameState.Push)
-            {
-                //response += $"Dealer hand: {currentGame.DealerHand.Select(c => c.ToChatString())}\n";
-                response += $"It's a push. Your wager of {currentGame.Wager} is returned.";
-                BlackjackService.ProcessFinishedGame(Context.User.Username);
-            }
-
-            Console.WriteLine($"{LP} Now responding with: \"{response}\"");
-            await RespondAsync(response);
+            var result = BlackjackService.Bet(Context.User.Username, wager);
+            await RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
         }
 
         [SlashCommand("hit", "Take another card.")]
-        public async Task Hit()
+        public async Task HitCommand()
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
-            if (currentGame == null)
-            {
-                await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
-                return;
-            }
-
-            try
-            {
-                currentGame.Tick(PlayerChoice.Hit);
-            }
-            catch (Exception e)
-            {
-                await RespondAsync(e.Message);
-                return;
-            }
-
-
-            string playerHandString = String.Join(", ", currentGame.PlayerHand.Select(c => c.ToChatString()));
-            ushort playerScore = currentGame.BestScore(currentGame.PlayerHand);
-            
-            switch (currentGame.State)
-            {
-                case GameState.PlayerChoose:
-                    await RespondAsync($"You drew {currentGame.PlayerHand.Last().ToChatString()}.\n\n " +
-                        $"Your hand: {playerHandString}\nHit or stand?");
-                    break;
-                case GameState.PlayerBust:
-                    BlackjackService.ProcessFinishedGame(Context.User.Username);
-                    await RespondAsync($"You drew {currentGame.PlayerHand.Last().ToChatString()}\n\n" +
-                        $"Busted with a score of {playerScore}. Final hand: {playerHandString}.\n" +
-                        $"Lost {currentGame.Wager} credits.");
-                    break;
-                case GameState.DealerDraw:
-                    string response = $"You drew {currentGame.PlayerHand.Last().ToChatString()}.\n\n" +
-                        $"Hand: {playerHandString}. That's a perfect score of 21!\n";
-                    while (currentGame.State == GameState.DealerDraw)
-                    {
-                        currentGame.Tick();
-                        response += $"Dealer drew {currentGame.DealerHand.Last().ToChatString()}\n";
-                    }
-
-                    string dealerHandString = String.Join(", ", currentGame.DealerHand.Select(c => c.ToChatString()));
-                    ushort dealerScore = currentGame.BestScore(currentGame.DealerHand);
-                    switch (currentGame.State)
-                    {
-                        case GameState.DealerBust:
-                            response += $"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"Won {currentGame.Wager} credits.";
-                            break;
-                        case GameState.PlayerWon:
-                            response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"You won with a score of {playerScore}.\n" +
-                                $"Won {currentGame.Wager} credits.";
-                            break;
-                        case GameState.DealerWon:
-                            response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"You lost with a score of {playerScore}.\n" +
-                                $"Lost {currentGame.Wager} credits.";
-                            break;
-                        case GameState.Push:
-                            response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"It's a push.\n" +
-                                $"Your wager of {currentGame.Wager} credits is returned.";
-                            break;
-                        default:
-                            response += $"BIG error. Not looking great. Unexpected GameState ({currentGame.State}) after " +
-                                $"finishing dealer draws. Should be DealerBust({GameState.DealerBust}), PlayerWon(" +
-                                $"{GameState.PlayerWon}), DealerWon({GameState.DealerWon}), or Push({GameState.Push}.";
-                            break;
-                    }
-
-                    BlackjackService.ProcessFinishedGame(Context.User.Username);
-                    await RespondAsync(response);
-                    break;
-                    //TODO: rest of post-tick states (i think just bust?)
-            }
+            (string Response, ButtonGroup IncludedButtons) result = BlackjackService.Hit(Context.User.Username);
+            await RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
         }
 
         [SlashCommand("stand", "Keep your current hand.")]
-        public async Task Stand()
+        public async Task StandCommand()
         {
-            BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
-            if (currentGame == null)
-            {
-                await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
-                return;
-            }
-
-            try
-            {
-                currentGame.Tick(PlayerChoice.Stand);
-            }
-            catch (Exception e)
-            {
-                await RespondAsync(e.Message);
-                return;
-            }
-
-            if (currentGame.State != GameState.DealerDraw)
-            {
-                Console.WriteLine($"{LP} Invalid game state after Tick on PlayerChoice.Stand: {currentGame.State}");
-                await RespondAsync($"There was a problem. Game aborted. (invalid state on tick, {currentGame.State}");
-                BlackjackService.ClearUserGame(Context.User.Username);
-                return;
-            }
-
-            StringBuilder sb = new StringBuilder();
-            while (currentGame.State == GameState.DealerDraw)
-            {
-                try
-                {
-                    currentGame.Tick();
-                }
-                catch (Exception e)
-                {
-                    await RespondAsync(e.Message);
-                    return;
-                }
-                sb.AppendLine($"Dealer drew {currentGame.DealerHand.Last().ToChatString()}.");
-            }
-
-            //TODO: Respond with result of game.
-            // DealerBust, PlayerWon, DealerWon, Push
-            string dealerHandString = String.Join(", ", currentGame.DealerHand.Select(c => c.ToChatString()));
-            ushort dealerScore = currentGame.BestScore(currentGame.DealerHand);
-            ushort playerScore = currentGame.BestScore(currentGame.PlayerHand);
-            switch (currentGame.State)
-            {
-                case GameState.DealerBust:
-                    sb.AppendLine($"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"Won {currentGame.Wager} credits.");
-                    break;
-                case GameState.PlayerWon:
-                    sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"You won with a score of {playerScore}.\n" +
-                        $"Won {currentGame.Wager} credits.");
-                    break;
-                case GameState.DealerWon:
-                    sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"You lost with a score of {playerScore}.\n" +
-                        $"Lost {currentGame.Wager} credits.");
-                    break;
-                case GameState.Push:
-                    sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"It's a push.\n" +
-                        $"Your wager of {currentGame.Wager} credits is returned.");
-                    break;
-                default:
-                    sb.AppendLine($"BIG error. Not looking great. Unexpected GameState ({currentGame.State}) after " +
-                        $"finishing dealer draws. Should be DealerBust({GameState.DealerBust}), PlayerWon(" +
-                        $"{GameState.PlayerWon}), DealerWon({GameState.DealerWon}), or Push({GameState.Push}.");
-                    break;
-            }
-
-            BlackjackService.ProcessFinishedGame(Context.User.Username);
-            await RespondAsync(sb.ToString());
+            (string Response, ButtonGroup IncludedButtons) result = BlackjackService.Stand(Context.User.Username);
+            await RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
         }
 
         [SlashCommand("show", "Show your current game.")]
-        public async Task Show()
+        public async Task ShowCommand()
         {
             BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
             if (currentGame == null)
@@ -237,7 +114,7 @@ namespace brock.Blackjack
                 return;
             }
 
-            await RespondAsync(currentGame.ToChatString());
+            await RespondAsync(currentGame.ToChatString(), components: currentGame.State == GameState.PlayerChoose ? GetButtonComponent(ButtonGroup.HitStand) : null);
         }
 
         [SlashCommand("cleargame", "(admin) Clear game for specified user.")]
@@ -263,6 +140,36 @@ namespace brock.Blackjack
             {
                 await RespondAsync($"ClearUserGame() returned false despite GetUserCurrentGame not returning null?");
             }
+        }
+
+        private Modal NewBetModal()
+        {
+            return new ModalBuilder()
+                .WithTitle("New Bet")
+                .WithCustomId("blackjack-new-bet")
+                .AddTextInput("Wager:", "wager", TextInputStyle.Short)
+                .Build();
+        }
+
+        private MessageComponent GetButtonComponent(ButtonGroup buttonGroup)
+        {
+            switch (buttonGroup)
+            {
+                case ButtonGroup.None:
+                    return null;
+                case ButtonGroup.HitStand:
+                    return new ComponentBuilder()
+                        .WithButton("Hit", "blackjack-hit", ButtonStyle.Success)
+                        .WithButton("Stand", "blackjack-stand", ButtonStyle.Danger)
+                        .Build();
+                case ButtonGroup.PlayAgain:
+                    return new ComponentBuilder()
+                        .WithButton("Play Again", "blackjack-play-again", ButtonStyle.Primary)
+                        .Build();
+            }
+
+            Console.WriteLine($"{LP} Error! GetButtonComponent() fell out of switch! Unknown ButtonGroup '{buttonGroup}'?");
+            return null;
         }
     }
 }

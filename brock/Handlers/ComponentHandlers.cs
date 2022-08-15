@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace brock.Handlers
 {
-    public class SelectMenuHandlers
+    public class ComponentHandlers
     {
         private readonly DiscordSocketClient _socketClient;
         private readonly SpotifyService _spotify;
         private readonly ConfigService _config;
 
-        public SelectMenuHandlers(DiscordSocketClient socketClient, SpotifyService spotify, ConfigService config)
+        public ComponentHandlers(DiscordSocketClient socketClient, SpotifyService spotify, ConfigService config)
         {
             _socketClient = socketClient;
             _spotify = spotify;
@@ -23,7 +23,7 @@ namespace brock.Handlers
 
         public void Initialize()
         {
-            Console.WriteLine("[[ SelectMenuHandler.Initialize() ]]");
+            Console.WriteLine("[[ ComponentHandlers.Initialize() ]]");
 
             _socketClient.SelectMenuExecuted += SelectMenuExecuted;
         }

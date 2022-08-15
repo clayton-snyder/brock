@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Interactions;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace brock.Services
@@ -10,7 +12,8 @@ namespace brock.Services
         // NOTE: Two ways of dependency injection below. Either give the dependency reference a public
         // getter/setter or inject it in the constructor. (Different naming convention due to priv var?)
         public InteractionService Commands { get; set; }
-        public ScienceService ScienceService { get; set; }
+        public ScienceService Science { get; set; }
+        public DatabaseService Database { get; set; }
         private readonly InteractionHandler _handler;
 
         public SlashDevCmdsModule(InteractionHandler handler)
@@ -61,7 +64,14 @@ namespace brock.Services
         [SlashCommand("science-event", "Get today's daily science event.")]
         public async Task ScienceEvent()
         {
-            await RespondAsync(await ScienceService.GetScienceFactForDay(7, 15));
+            await RespondAsync(await Science.GetScienceEventForDay(DateTime.Now.Month, DateTime.Now.Day));
+        }
+
+        [SlashCommand("test-db", "Get the Test rows from database.")]
+        public async Task TestDb()
+        {
+            List<string> rows = Database.GetAllTestRows();
+            await RespondAsync(string.Join("\n", rows));
         }
     }
 }
