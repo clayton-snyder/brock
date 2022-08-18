@@ -42,11 +42,11 @@ namespace brock.Blackjack
             {
                 case "blackjack-hit":
                     result = BlackjackService.Hit(arg.User.Username);
-                    await arg.RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+                    await arg.RespondAsync($"{arg.User.Mention} \n{result.Response}", components: GetButtonComponent(result.IncludedButtons));
                     break;
                 case "blackjack-stand":
                     result = BlackjackService.Stand(arg.User.Username);
-                    await arg.RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+                    await arg.RespondAsync($"{arg.User.Mention} \n{result.Response}", components: GetButtonComponent(result.IncludedButtons));
                     break;
                 case "blackjack-play-again":
                     await arg.RespondWithModalAsync(NewBetModal());
@@ -72,13 +72,13 @@ namespace brock.Blackjack
                     {
                         Console.WriteLine($"{LP} Invalid new wager from modal: {e.Message}");
                         await arg.RespondAsync(
-                            $"Idiot, enter a positive integer under {_config.Get<uint>("BlackjackMaxWager")}.",
+                            $"{arg.User.Mention} \nIdiot, enter a positive integer under {_config.Get<uint>("BlackjackMaxWager")}.",
                             components: GetButtonComponent(ButtonGroup.PlayAgain)
                         );
                         return;
                     }
                     (string Response, ButtonGroup IncludedButtons) result = BlackjackService.Bet(arg.User.Username, wager);
-                    await arg.RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+                    await arg.RespondAsync($"{arg.User.Mention} \n{result.Response}", components: GetButtonComponent(result.IncludedButtons));
                     return;                    
             }
         }
@@ -87,21 +87,21 @@ namespace brock.Blackjack
         public async Task Bet([MinValue(1)] uint wager)
         {
             var result = BlackjackService.Bet(Context.User.Username, wager);
-            await RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+            await RespondAsync($"{Context.User.Mention} \n{result.Response}", components: GetButtonComponent(result.IncludedButtons));
         }
 
         [SlashCommand("hit", "Take another card.")]
         public async Task HitCommand()
         {
             (string Response, ButtonGroup IncludedButtons) result = BlackjackService.Hit(Context.User.Username);
-            await RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+            await RespondAsync($"{Context.User.Mention} \n{result.Response}", components: GetButtonComponent(result.IncludedButtons));
         }
 
         [SlashCommand("stand", "Keep your current hand.")]
         public async Task StandCommand()
         {
             (string Response, ButtonGroup IncludedButtons) result = BlackjackService.Stand(Context.User.Username);
-            await RespondAsync(result.Response, components: GetButtonComponent(result.IncludedButtons));
+            await RespondAsync($"{Context.User.Mention} \n{result.Response}", components: GetButtonComponent(result.IncludedButtons));
         }
 
         [SlashCommand("show", "Show your current game.")]
@@ -110,11 +110,12 @@ namespace brock.Blackjack
             BlackjackGame currentGame = BlackjackService.GetUserCurrentGame(Context.User.Username);
             if (currentGame == null)
             {
-                await RespondAsync("Couldn't find an existing game. Start a new game by placing a bet.");
+                await RespondAsync($"{Context.User.Mention} \nCouldn't find an existing game. Start a new game by placing a bet.");
                 return;
             }
 
-            await RespondAsync(currentGame.ToChatString(), components: currentGame.State == GameState.PlayerChoose ? GetButtonComponent(ButtonGroup.HitStand) : null);
+            await RespondAsync($"{Context.User.Mention} \n{currentGame.ToChatString()}", 
+                components: currentGame.State == GameState.PlayerChoose ? GetButtonComponent(ButtonGroup.HitStand) : null);
         }
 
         [SlashCommand("cleargame", "(admin) Clear game for specified user.")]
