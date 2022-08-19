@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using brock.DbModels;
+using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +18,12 @@ namespace brock.Services
         private Timer _timer;
         private readonly string baseUrl = "https://todayinsci.com";
         private const string LP = "[ScienceService]";  // Log prefix
+        private DateTime? _nextPostAt;
 
         public void Initialize()
         {
             Client = new HttpClient();
+            _nextPostAt = null;
             // TODO: Create the scheduler
             //https://stackoverflow.com/questions/19291816/executing-method-every-hour-on-the-hour
             // Check every 15 minutes if it's time for the daily fact yet
@@ -32,6 +35,33 @@ namespace brock.Services
         //{
 
         //}
+
+        public int LogDailyPostInDb(ushort month, ushort day, string title, string description, DateTime postedAt)
+        {
+            try
+            {
+                Console.WriteLine("Attempting to open DB connection...");
+                using (DailySciencePostContext db = new DailySciencePostContext())
+                {
+                    DailySciencePost post = new DailySciencePost
+                    {
+                        Month = month,
+                        Day = day,
+                        Title = title,
+                        Description = description,
+                        PostedAt = postedAt.ToUniversalTime(),
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    db.DailySciencePost.Add(post);
+                    return db.SaveChanges();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging post to DB: {e.Message}\n{e.StackTrace}\n{e.InnerException}");
+                return 0;
+            }
+        }
 
         public async Task<string> GetScienceEventForDay(int month, int day)
         {

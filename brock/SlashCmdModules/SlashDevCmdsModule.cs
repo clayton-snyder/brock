@@ -73,5 +73,12 @@ namespace brock.Services
             List<string> rows = Database.GetAllTestRows();
             await RespondAsync(string.Join("\n", rows));
         }
+
+        [SlashCommand("test-insert-db", "Test inserting a record using EF6.")]
+        public async Task TestInsertDb()
+        {
+            Console.WriteLine($"RETURNED NUM: {Science.LogDailyPostInDb(8, 19, "Test", "This is a test record and was not actually posted to the channel.", DateTime.Now)}");
+            await RespondAsync("Done.");
+        }
     }
 }

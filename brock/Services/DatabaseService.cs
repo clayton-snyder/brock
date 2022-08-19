@@ -48,18 +48,26 @@ namespace brock.Services
             List<List<object>> rows = new List<List<object>>();
 
             SqlCommand cmd = new SqlCommand(query, _connection);
-            cmd.Connection.Open();
-            using (SqlDataReader reader = cmd.ExecuteReader())
+            Console.WriteLine("Attempting to connect to DB...");
+            try
             {
-                while (reader.Read())
+                cmd.Connection.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    List<object> row = new List<object>();
-                    for(int i = 0; i < reader.FieldCount; i++)
+                    while (reader.Read())
                     {
-                        row.Add(reader.GetValue(i));
+                        List<object> row = new List<object>();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            row.Add(reader.GetValue(i));
+                        }
+                        rows.Add(row);
                     }
-                    rows.Add(row);
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error fetching test rows from DB: {e.Message}");
             }
             return rows;
         }
