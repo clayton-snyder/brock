@@ -54,7 +54,7 @@ namespace brock
                 await services.GetRequiredService<InteractionHandler>().InitializeAsync();
                 await _spotify.InitializeAsync();
                 services.GetRequiredService<BlackjackService>().Initialize();
-                services.GetRequiredService<ScienceService>().Initialize();
+                
                 services.GetRequiredService<DatabaseService>().Initialize();
 
                 _client.Ready += ReadyAsync;
@@ -62,6 +62,9 @@ namespace brock
                 await _client.LoginAsync(TokenType.Bot, discordToken);
                 Console.WriteLine($"{LP} Attempting StartAsync().");
                 await _client.StartAsync();
+
+                // ScienceService must be Initialized AFTER client login so it has access to guilds/channels
+                services.GetRequiredService<ScienceService>().Initialize();
 
                 // Block task until program is closed
                 Console.WriteLine($"{LP} Init steps finished, now blocking.");
