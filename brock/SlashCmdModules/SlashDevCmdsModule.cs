@@ -65,8 +65,8 @@ namespace brock.Services
         public async Task ScienceEvent()
         {
             KeyValuePair<string, string> todaysEvent = await Science.GetScienceEventForDay(DateTime.Now.Month, DateTime.Now.Day);
-
-            await RespondAsync($"_**{todaysEvent.Key}**_\n{todaysEvent.Value}");
+            string[] keyTokens = todaysEvent.Key.Split(new char[] { ' ' }, count: 3);
+            await RespondAsync($"_{keyTokens[0]} {keyTokens[1]}: **{keyTokens[2]}**_\n{todaysEvent.Value}");
         }
 
         [SlashCommand("test-db", "Get the Test rows from database.")]
