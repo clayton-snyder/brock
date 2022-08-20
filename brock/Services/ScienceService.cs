@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -100,7 +101,8 @@ namespace brock.Services
         // Posts the provided text to all channels in channelIdsToPost
         private int PostScienceEvent(KeyValuePair<string, string> dailyEvent)
         {
-            string postText = $"_**{dailyEvent.Key}**_\n{dailyEvent.Value}";
+            string[] keyTokens = dailyEvent.Key.Split(new char[] {' '}, count: 3);
+            string postText = $"_{keyTokens[0]} {keyTokens[1]}: **{keyTokens[2]}**_\n{dailyEvent.Value}";
             Console.WriteLine($"{LP} Trying to post today's science event:\n{postText}");
             int channelsPosted = 0;
             foreach (KeyValuePair<ulong, ulong> guildToChannel in _guildToChannelIdsToPost)
@@ -248,7 +250,9 @@ namespace brock.Services
             KeyValuePair<string, string> selectedEvent = options.ElementAt(rand.Next(0, options.Count));
 
 
-            return new KeyValuePair<string, string>(selectedEvent.Key, selectedEvent.Value);
+            return new KeyValuePair<string, string>(
+                $"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {day} {selectedEvent.Key}",
+                selectedEvent.Value);
         }
     }
 }
