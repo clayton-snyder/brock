@@ -64,7 +64,7 @@ namespace brock.Services
         [SlashCommand("science-event", "Get today's daily science event.")]
         public async Task ScienceEvent()
         {
-            KeyValuePair<string, string> todaysEvent = await Science.GetScienceEventForDay(DateTime.Now.Day, DateTime.Now.Month);
+            KeyValuePair<string, string> todaysEvent = await Science.GetScienceEventForDay(DateTime.Now.Month, DateTime.Now.Day);
 
             await RespondAsync($"_**{todaysEvent.Key}**_\n{todaysEvent.Value}");
         }
