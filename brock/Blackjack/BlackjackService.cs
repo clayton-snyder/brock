@@ -19,6 +19,7 @@ namespace brock.Blackjack
         Dictionary<string, BlackjackGame> ActiveGames;
         private const string LP = "[BLACKJACK - BlackjackService]";  // Log prefix
         private readonly ConfigService _config;
+        private readonly DiscordSocketClient _client;
 
         public enum ButtonGroup
         {
@@ -27,13 +28,18 @@ namespace brock.Blackjack
             PlayAgain
         }
 
-        public BlackjackService(ConfigService config = null)
+        public BlackjackService(ConfigService config = null, DiscordSocketClient client = null)
         {
             if (config == null)
             {
                 throw new ArgumentNullException($"{LP} Constructor - config arg is null?");
             }
+            if (client == null)
+            {
+                throw new ArgumentNullException($"{LP} Constructor - client arg is null?");
+            }
             _config = config;
+            _client = client;
         }
 
         public void Initialize()
@@ -76,6 +82,14 @@ namespace brock.Blackjack
                 return 0.0f;
             }
 
+            int recordsAdded = LogGameResultInDb(game, username, false);
+            if (recordsAdded < 1)
+            {
+                Console.WriteLine($"{LP} recordsAdded < 1, discarding game");
+                throw new Exception($"Unexpected number of rows affected from DB insert: {recordsAdded}. Game discarded.");
+            }
+
+            Console.WriteLine($"{LP} DB Log passed the Exception territory!!!");
             if (game.State == GameState.PlayerWon || game.State == GameState.DealerBust) return game.Wager;
             if (game.State == GameState.DealerWon || game.State == GameState.PlayerBust) return -game.Wager;
             if (game.State == GameState.PlayerWonNatural) return game.Wager * 1.5f;
@@ -83,6 +97,34 @@ namespace brock.Blackjack
             return 0.0f;
         }
 
+        private int LogGameResultInDb(BlackjackGame game, string username, bool ignore = false)
+        {
+            BlackjackGameResult dbRecord = new BlackjackGameResult
+            {
+                Username = username,
+                Wager = game.Wager,
+                PlayerHand = String.Join("_", game.PlayerHand),
+                PlayerScore = game.BestScore(game.PlayerHand),
+                DealerHand = String.Join("_", game.DealerHand),
+                DealerScore = game.BestScore(game.DealerHand),
+                GameStateEnumId = (int)game.State,
+                Ignore = ignore
+            };
+
+            try
+            {
+                using (BlackjackContext db = new BlackjackContext(_config.Get<string>("DbConnectionString")))
+                {
+                    db.GameResults.Add(dbRecord);
+                    return db.SaveChanges();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"{LP} Error logging GameResult to DB: {e.Message}\n{e.InnerException}");
+                return 0;
+            }
+        }
         public bool ClearUserGame(string username)
         {
             Console.WriteLine($"{LP} Clearing game for {username}.");
@@ -164,7 +206,7 @@ namespace brock.Blackjack
                 case GameState.PlayerChoose:
                     return ($"You drew {currentGame.PlayerHand.Last().ToChatString()}.\n\nYour hand: {playerHandString}\nHit or stand?", ButtonGroup.HitStand);
                 case GameState.PlayerBust:
-                    ProcessFinishedGame(username);
+                    ProcessFinishedGame(username);  //TODO
                     return ($"You drew {currentGame.PlayerHand.Last().ToChatString()}\n\n" +
                         $"Busted with a score of {playerScore}. Final hand: {playerHandString}.\n" +
                         $"Lost {currentGame.Wager} credits.", ButtonGroup.PlayAgain);
@@ -177,28 +219,44 @@ namespace brock.Blackjack
                         response += $"Dealer drew {currentGame.DealerHand.Last().ToChatString()}\n";
                     }
 
+                    // BELOW HERE COMMENT OUT except final return
+                    /*
                     string dealerHandString = String.Join(", ", currentGame.DealerHand.Select(c => c.ToChatString()));
                     ushort dealerScore = currentGame.BestScore(currentGame.DealerHand);
+
+                    // The rest is kind of messy. We save data from the current game and process it before building the
+                    // final response string, because this is cleaner than having ProcessGame() called with full exception
+                    // handling in each case block.
+                    GameState finalState = currentGame.State;
+                    float wager = currentGame.Wager;
+                    float? creditsChange = null;
+                    string errorMsg = "";
+                    SocketUser adminUser = _client.GetUser(_config.Get<ulong>("DiscordAdminUserId"));
+
+                    try { creditsChange = ProcessFinishedGame(username); }
+                    catch (Exception e) { errorMsg = $"{e.Message} {adminUser.Mention}"; }
+
+                    StringBuilder sb = new StringBuilder();
                     switch (currentGame.State)
                     {
                         case GameState.DealerBust:
-                            response += $"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"Won {currentGame.Wager} credits.";
+                            sb.AppendLine($"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}");
+                            sb.AppendLine(creditsChange.HasValue ? $"Won {creditsChange} credits." : $"ERROR: {errorMsg}");
                             break;
                         case GameState.PlayerWon:
-                            response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"You won with a score of {playerScore}.\n" +
-                                $"Won {currentGame.Wager} credits.";
+                            sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
+                                $"You won with a score of {playerScore}.");
+                            sb.AppendLine(creditsChange.HasValue ? $"Won {creditsChange} credits." : $"ERROR: {errorMsg}");
                             break;
                         case GameState.DealerWon:
-                            response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"You lost with a score of {playerScore}.\n" +
-                                $"Lost {currentGame.Wager} credits.";
+                            sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
+                                $"You lost with a score of {playerScore}.");
+                            sb.AppendLine(creditsChange.HasValue ? $"Lost {Math.Abs(creditsChange.Value)} credits." : $"ERROR: {errorMsg}");
                             break;
                         case GameState.Push:
-                            response += $"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                                $"It's a push.\n" +
-                                $"Your wager of {currentGame.Wager} credits is returned.";
+                            sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
+                                $"It's a push.");
+                            sb.AppendLine(creditsChange.HasValue ? $"Your wager of {currentGame.Wager} credits is returned." : $"ERROR: {errorMsg}");
                             break;
                         default:
                             response += $"BIG error. Not looking great. Unexpected GameState ({currentGame.State}) after " +
@@ -206,8 +264,9 @@ namespace brock.Blackjack
                                 $"{GameState.PlayerWon}), DealerWon({GameState.DealerWon}), or Push({GameState.Push}.";
                             break;
                     }
-                    ProcessFinishedGame(username);
-                    return (response, ButtonGroup.PlayAgain);
+                    //ProcessFinishedGame(username);
+                    */
+                    return (ProcessAndGetResponse(currentGame, username), ButtonGroup.PlayAgain);
             }
 
             return ("Unusual phenomenon: fell out the switch without returning. Shouldn't happen.", ButtonGroup.None);
@@ -251,40 +310,104 @@ namespace brock.Blackjack
                 sb.AppendLine($"Dealer drew {currentGame.DealerHand.Last().ToChatString()}.");
             }
 
+            // BELOW HERE COMMENT OUT
+            /*
             // DealerBust, PlayerWon, DealerWon, Push
             string dealerHandString = String.Join(", ", currentGame.DealerHand.Select(c => c.ToChatString()));
             ushort dealerScore = currentGame.BestScore(currentGame.DealerHand);
             ushort playerScore = currentGame.BestScore(currentGame.PlayerHand);
-            switch (currentGame.State)
+
+            // The rest is kind of messy. We save data from the current game and process it before building the
+            // final response string, because this is cleaner than having ProcessGame() called with full exception
+            // handling in each case block.
+            GameState finalState = currentGame.State;
+            float wager = currentGame.Wager;
+            float? creditsChange = null;
+            string errorMsg = "";
+            SocketUser adminUser = _client.GetUser(_config.Get<ulong>("DiscordAdminUserId"));
+
+            try { creditsChange = ProcessFinishedGame(username); }
+            catch (Exception e) { errorMsg = $"{e.Message} {adminUser.Mention}"; }
+
+            switch (finalState)
             {
                 case GameState.DealerBust:
-                    sb.AppendLine($"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"Won {currentGame.Wager} credits.");
+                    sb.AppendLine($"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}");
+                    sb.AppendLine(creditsChange.HasValue ? $"Won {creditsChange} credits." : $"ERROR: {errorMsg}");
                     break;
                 case GameState.PlayerWon:
                     sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"You won with a score of {playerScore}.\n" +
-                        $"Won {currentGame.Wager} credits.");
+                        $"You won with a score of {playerScore}.");
+                    sb.AppendLine(creditsChange.HasValue ? $"Won {creditsChange} credits." : $"ERROR: {errorMsg}");
                     break;
                 case GameState.DealerWon:
                     sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"You lost with a score of {playerScore}.\n" +
-                        $"Lost {currentGame.Wager} credits.");
+                        $"You lost with a score of {playerScore}.");
+                    sb.AppendLine(creditsChange.HasValue ? $"Lost {Math.Abs(creditsChange.Value)} credits." : $"ERROR: {errorMsg}");
                     break;
                 case GameState.Push:
                     sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
-                        $"It's a push.\n" +
-                        $"Your wager of {currentGame.Wager} credits is returned.");
+                        $"It's a push.");
+                    sb.AppendLine(creditsChange.HasValue ? $"Your wager of {currentGame.Wager} credits is returned." : $"ERROR: {errorMsg}");
                     break;
                 default:
                     sb.AppendLine($"BIG error. Not looking great. Unexpected GameState ({currentGame.State}) after " +
                         $"finishing dealer draws. Should be DealerBust({GameState.DealerBust}), PlayerWon(" +
                         $"{GameState.PlayerWon}), DealerWon({GameState.DealerWon}), or Push({GameState.Push}.");
                     break;
-            }
+            }*/
 
-            ProcessFinishedGame(username);
-            return (Response: sb.ToString(), IncludedButtons: ButtonGroup.PlayAgain);
+            return (Response: ProcessAndGetResponse(currentGame, username), IncludedButtons: ButtonGroup.PlayAgain);
+        }
+
+        /// <summary>
+        /// Runs ProcessFinishedGame on the provided game and returns a string to be sent to the Discord text channel.
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
+        private string ProcessAndGetResponse(BlackjackGame game, string username)
+        {
+            //GameState finalState = currentGame.State;
+            //float wager = currentGame.Wager;
+            SocketUser adminUser = _client.GetUser(_config.Get<ulong>("DiscordAdminUserId"));
+            string dealerHandString = String.Join(", ", game.DealerHand.Select(c => c.ToChatString()));
+            ushort dealerScore = game.BestScore(game.DealerHand);
+            ushort playerScore = game.BestScore(game.PlayerHand);
+            float? creditsChange = null;
+            string errorMsg = "";
+
+            try { creditsChange = ProcessFinishedGame(username); }
+            catch (Exception e) { errorMsg = $"{e.Message} {adminUser.Mention}"; }
+
+            StringBuilder sb = new StringBuilder();
+            switch (game.State)
+            {
+                case GameState.DealerBust:
+                    sb.AppendLine($"Dealer busted with a score of {dealerScore}. Final hand: {dealerHandString}");
+                    sb.AppendLine(creditsChange.HasValue ? $"Won {creditsChange} credits." : $"ERROR: {errorMsg}");
+                    break;
+                case GameState.PlayerWon:
+                    sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
+                        $"You won with a score of {playerScore}.");
+                    sb.AppendLine(creditsChange.HasValue ? $"Won {creditsChange} credits." : $"ERROR: {errorMsg}");
+                    break;
+                case GameState.DealerWon:
+                    sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
+                        $"You lost with a score of {playerScore}.");
+                    sb.AppendLine(creditsChange.HasValue ? $"Lost {Math.Abs(creditsChange.Value)} credits." : $"ERROR: {errorMsg}");
+                    break;
+                case GameState.Push:
+                    sb.AppendLine($"Dealer stood with a score of {dealerScore}. Final hand: {dealerHandString}\n" +
+                        $"It's a push.");
+                    sb.AppendLine(creditsChange.HasValue ? $"Your wager of {game.Wager} credits is returned." : $"ERROR: {errorMsg}");
+                    break;
+                default:
+                    sb.AppendLine($"BIG error. Not looking great. Unexpected GameState ({game.State}) after " +
+                        $"finishing dealer draws. Should be DealerBust({GameState.DealerBust}), PlayerWon(" +
+                        $"{GameState.PlayerWon}), DealerWon({GameState.DealerWon}), or Push({GameState.Push}.");
+                    break;
+            }
+            return sb.ToString();
         }
     }
 }
